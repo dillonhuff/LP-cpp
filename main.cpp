@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 
+#include <gmpxx.h>
+
 using namespace std;
 
 struct value {
