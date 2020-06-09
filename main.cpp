@@ -80,6 +80,9 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   for (auto c : constraints) {
     cout << "  " << *c << " >= 0" << endl;
   }
+
+  standard_form sf = to_standard_form(sum, constraints);
+
   return nullptr;
 }
 
