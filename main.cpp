@@ -148,6 +148,8 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << "  " << *c << " = 0" << endl;
   }
 
+  tableaux tab = build_initial_tableau(sf);
+
   return nullptr;
 }
 
