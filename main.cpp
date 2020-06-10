@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -10,7 +11,12 @@ struct value {
 
   value() : v(0) {}
   value(const int val) : v(val) {}
+  value(const mpz_class& val) : v(val) {}
 };
+
+value* neg(value* v) {
+  return new value(-(v->v));
+}
 
 struct point {
   std::vector<value*> coords;
@@ -28,8 +34,22 @@ struct linear_expr {
     constant = new value(0);
   }
 
+  int dimension() const {
+    return coeffs.size();
+  }
+
+
   void set_const(value* const v) {
     constant = v;
+  }
+
+  value* get_const() {
+    return constant;
+  }
+
+  value* get_coeff(const int dim) {
+    assert(dim < dimension());
+    return coeffs.at(dim);
   }
 
   void set_coeff(const int dim, value* const v) {
@@ -74,6 +94,43 @@ struct context {
   }
 };
 
+struct standard_form {
+  linear_expr* objective;
+  vector<linear_expr*> equalities;
+};
+
+standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& constraints) {
+  standard_form form;
+
+  int num_slack_vars = constraints.size();
+  int num_base_vars = 2*obj->dimension();
+  int standard_dim = num_slack_vars + num_base_vars;
+
+  form.objective = new linear_expr(standard_dim);
+  for (int d = 0; d < obj->dimension(); d++) {
+    form.objective->set_coeff(2*d, obj->get_coeff(d));
+    form.objective->set_coeff(2*d + 1, neg(obj->get_coeff(d)));
+  }
+
+  int slack_offset = num_base_vars;
+  for (auto c : constraints) {
+    auto cs = new linear_expr(standard_dim);
+    for (int d = 0; d < c->dimension(); d++) {
+      cs->set_coeff(2*d, c->get_coeff(d));
+      cs->set_coeff(2*d + 1, neg(c->get_coeff(d)));
+    }
+
+    cs->set_coeff(slack_offset, new value(1));
+
+    cs->set_const(c->get_const());
+
+    form.equalities.push_back(cs);
+    slack_offset++;
+  }
+
+  return form;
+}
+
 value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
@@ -82,6 +139,12 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
 
   standard_form sf = to_standard_form(sum, constraints);
+  cout << "Standard form..." << endl;
+  cout << "  " << *(sf.objective) << endl;
+  cout << "st" << endl;
+  for (auto c : sf.equalities) {
+    cout << "  " << *c << " = 0" << endl;
+  }
 
   return nullptr;
 }
