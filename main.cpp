@@ -97,14 +97,16 @@ struct context {
 struct standard_form {
   linear_expr* objective;
   vector<linear_expr*> equalities;
+  int num_base_vars;
+  int num_slack_vars;
 };
 
 standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& constraints) {
   standard_form form;
 
-  int num_slack_vars = constraints.size();
-  int num_base_vars = 2*obj->dimension();
-  int standard_dim = num_slack_vars + num_base_vars;
+  form.num_slack_vars = constraints.size();
+  form.num_base_vars = 2*obj->dimension();
+  int standard_dim = form.num_slack_vars + form.num_base_vars;
 
   form.objective = new linear_expr(standard_dim);
   for (int d = 0; d < obj->dimension(); d++) {
@@ -112,7 +114,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
     form.objective->set_coeff(2*d + 1, neg(obj->get_coeff(d)));
   }
 
-  int slack_offset = num_base_vars;
+  int slack_offset = form.num_base_vars;
   for (auto c : constraints) {
     auto cs = new linear_expr(standard_dim);
     for (int d = 0; d < c->dimension(); d++) {
