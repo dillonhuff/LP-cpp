@@ -133,6 +133,25 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
   return form;
 }
 
+struct tableau {
+  vector<vector<value*> > rows;
+
+  tableau(const int nrows, const int ncols) {
+    rows.resize(nrows);
+    for (auto& r : rows) {
+      r.resize(ncols);
+    }
+  }
+};
+
+tableau build_initial_tableau(standard_form& form) {
+  int ncols = form.num_slack_vars + form.num_base_vars + 2;
+  int nrows = form.equalities.size() + 1;
+  tableau tab(nrows, ncols);
+
+  return tab;
+}
+
 value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
@@ -148,7 +167,7 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << "  " << *c << " = 0" << endl;
   }
 
-  tableaux tab = build_initial_tableau(sf);
+  tableau tab = build_initial_tableau(sf);
 
   return nullptr;
 }
