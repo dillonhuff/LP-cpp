@@ -142,13 +142,48 @@ struct tableau {
       r.resize(ncols);
     }
   }
+
+  int num_rows() const {
+    return rows.size();
+  }
+
+  int num_cols() const {
+    assert(num_rows() > 0);
+    return rows.at(0).size();
+  }
+
+  value* get_entry(const int r, const int c) {
+    assert(r < rows.size());
+    assert(c < rows[r].size());
+    return rows[r][c];
+  }
+
+  void set_entry(const int r, const int c, value* v) {
+    assert(r < rows.size());
+    assert(c < rows[r].size());
+    rows[r][c] = v;
+  }
 };
 
 tableau build_initial_tableau(standard_form& form) {
-  int ncols = form.num_slack_vars + form.num_base_vars + 2;
+  int ncols = form.num_slack_vars + form.num_base_vars + 1;
   int nrows = form.equalities.size() + 1;
   tableau tab(nrows, ncols);
 
+  int r = 0;
+  for (int d = 0; d < form.objective->dimension(); d++) {
+    tab.set_entry(r, d, form.objective->get_coeff(d));
+  }
+  tab.set_entry(r, ncols - 1, form.objective->get_const());
+
+  r++;
+  for (auto c : form.equalities) {
+    for (int d = 0; d < c->dimension(); d++) {
+      tab.set_entry(r, d, c->get_coeff(d));
+    }
+    tab.set_entry(r, ncols - 1, c->get_const());
+    r++;
+  }
   return tab;
 }
 
@@ -168,6 +203,12 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
 
   tableau tab = build_initial_tableau(sf);
+  for (int r = 0; r < tab.num_rows(); r++) {
+    for (int c = 0; c < tab.num_cols(); c++) {
+      cout << *(tab.get_entry(r, c)) << " ";
+    }
+    cout << endl;
+  }
 
   return nullptr;
 }
