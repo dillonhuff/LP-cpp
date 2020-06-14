@@ -187,6 +187,22 @@ tableau build_initial_tableau(standard_form& form) {
   return tab;
 }
 
+int pick_pivot_row(tableau& tab) {
+  int pr = 0;
+  value* min = new value(0);
+  for (int c = 0; c < tab.num_cols(); c++) {
+    if (tab.get_entry(tab.num_rows() - 1, c) < min) {
+      pr = c;
+      min = tab.get_entry(tab.num_rows() - 1, c);
+    }
+  }
+  return pr;
+}
+
+int pick_pivot_col(const int pivot_row, tableau& tab) {
+  return 0;
+}
+
 value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
@@ -203,12 +219,16 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
 
   tableau tab = build_initial_tableau(sf);
+  cout << "Tableau" << endl;
   for (int r = 0; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols(); c++) {
       cout << *(tab.get_entry(r, c)) << " ";
     }
     cout << endl;
   }
+
+  int pivot_row = pick_pivot_row(tab);
+  int pivot_col = pick_pivot_col(pivot_row, tab);
 
   return nullptr;
 }
