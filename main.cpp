@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
+#include <set>
 
 #include <gmpxx.h>
 
@@ -146,6 +147,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 }
 
 struct tableau {
+  std::set<int> basic_variables;
   vector<vector<value*> > rows;
 
   tableau(const int nrows, const int ncols) {
@@ -175,12 +177,17 @@ struct tableau {
     assert(c < rows[r].size());
     rows[r][c] = v;
   }
+
 };
 
 tableau build_initial_tableau(standard_form& form) {
   int ncols = form.num_slack_vars + form.num_base_vars + 1;
   int nrows = form.equalities.size() + 1;
   tableau tab(nrows, ncols);
+
+  for (int s = form.num_base_vars + 1; s < ncols; s++) {
+    tab.basic_variables.insert(s);
+  }
 
   int r = 0;
   for (int d = 0; d < form.objective->dimension(); d++) {
@@ -232,6 +239,10 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 
   tableau tab = build_initial_tableau(sf);
   cout << "Tableau" << endl;
+  cout << "  " << "basic vars: " << endl;
+  for (auto b : tab.basic_variables) {
+    cout << "    " << b << endl;
+  }
   for (int r = 0; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols(); c++) {
       cout << *(tab.get_entry(r, c)) << " ";
@@ -239,10 +250,14 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << endl;
   }
 
-  int pivot_row = pick_pivot_row(tab);
-  cout << "pivot row = " << pivot_row << endl;
+  for (auto v : tab.non_basic_variables()) {
+    assert(false);
+  }
 
-  int pivot_col = pick_pivot_col(pivot_row, tab);
+  //int pivot_row = pick_pivot_row(tab);
+  //cout << "pivot row = " << pivot_row << endl;
+
+  //int pivot_col = pick_pivot_col(pivot_row, tab);
 
 
   return nullptr;
