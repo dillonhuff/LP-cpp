@@ -14,6 +14,18 @@ struct value {
   value(const mpz_class& val) : v(val) {}
 };
 
+bool operator==(const value& v, const int t) {
+  return cmp(v.v, t) == 0;
+}
+
+bool operator>(const value& v, const int t) {
+  return cmp(v.v, t) > 0;
+}
+
+bool operator<(const value& v, const int t) {
+  return cmp(v.v, t) < 0;
+}
+
 value* neg(value* v) {
   return new value(-(v->v));
 }
@@ -191,7 +203,7 @@ int pick_pivot_row(tableau& tab) {
   int pr = 0;
   value* min = new value(0);
   for (int c = 0; c < tab.num_cols(); c++) {
-    if (tab.get_entry(tab.num_rows() - 1, c) < min) {
+    if (*(tab.get_entry(tab.num_rows() - 1, c)) > 0) {
       pr = c;
       min = tab.get_entry(tab.num_rows() - 1, c);
     }
@@ -228,7 +240,10 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
 
   int pivot_row = pick_pivot_row(tab);
+  cout << "pivot row = " << pivot_row << endl;
+
   int pivot_col = pick_pivot_col(pivot_row, tab);
+
 
   return nullptr;
 }
