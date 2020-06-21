@@ -2,9 +2,11 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include "algorithm.h"
 
 #include <gmpxx.h>
 
+using namespace dbhc;
 using namespace std;
 
 struct value {
@@ -150,6 +152,20 @@ struct tableau {
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
 
+  value* objective_coeff(const int col) const {
+    return get_entry(num_rows() - 1, col);
+  }
+
+  std::set<int> non_basic_variables() const {
+    std::set<int> non_basic;
+    for (int i = 0; i < num_cols() - 1; i++) {
+      if (!elem(i, basic_variables)) {
+        non_basic.insert(i);
+      }
+    }
+    return non_basic;
+  }
+
   tableau(const int nrows, const int ncols) {
     rows.resize(nrows);
     for (auto& r : rows) {
@@ -166,7 +182,7 @@ struct tableau {
     return rows.at(0).size();
   }
 
-  value* get_entry(const int r, const int c) {
+  value* get_entry(const int r, const int c) const {
     assert(r < rows.size());
     assert(c < rows[r].size());
     return rows[r][c];
@@ -185,7 +201,8 @@ tableau build_initial_tableau(standard_form& form) {
   int nrows = form.equalities.size() + 1;
   tableau tab(nrows, ncols);
 
-  for (int s = form.num_base_vars + 1; s < ncols; s++) {
+  for (int s = form.num_base_vars; s < ncols - 1; s++) {
+    cout << s << " is a basic variable" << endl;
     tab.basic_variables.insert(s);
   }
 
@@ -239,9 +256,15 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 
   tableau tab = build_initial_tableau(sf);
   cout << "Tableau" << endl;
-  cout << "  " << "basic vars: " << endl;
+  cout << "  # basic vars: " << tab.basic_variables.size() << endl;
   for (auto b : tab.basic_variables) {
     cout << "    " << b << endl;
+  }
+
+  cout << "  # non basic vars: " << tab.non_basic_variables().size() << endl;
+  for (auto b : tab.non_basic_variables()) {
+    cout << "    " << b << endl;
+    assert(!elem(b, tab.basic_variables));
   }
   for (int r = 0; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols(); c++) {
@@ -250,8 +273,9 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << endl;
   }
 
-  for (auto v : tab.non_basic_variables()) {
-    assert(false);
+  for (auto x : tab.non_basic_variables()) {
+    value* c = tab.objective_coeff(x);
+    cout << "a_" << x << " = " << *c << endl;
   }
 
   //int pivot_row = pick_pivot_row(tab);
