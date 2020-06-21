@@ -163,6 +163,7 @@ struct tableau {
         non_basic.insert(i);
       }
     }
+
     return non_basic;
   }
 
@@ -205,6 +206,8 @@ tableau build_initial_tableau(standard_form& form) {
     cout << s << " is a basic variable" << endl;
     tab.basic_variables.insert(s);
   }
+
+  assert(tab.basic_variables.size() == form.equalities.size());
 
   int r = 0;
   for (int d = 0; d < form.objective->dimension(); d++) {
