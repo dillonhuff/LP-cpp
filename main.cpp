@@ -288,6 +288,7 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
       int c = x;
       for (int r = 1; r < tab.num_rows(); r++) {
         cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
+        value* ratio_val = *b / *c;
       }
     }
   }
