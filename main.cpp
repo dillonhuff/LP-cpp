@@ -10,15 +10,26 @@ using namespace dbhc;
 using namespace std;
 
 struct value {
-  mpz_class v;
+  mpq_class v;
 
   value() : v(0) {}
   value(const int val) : v(val) {}
-  value(const mpz_class& val) : v(val) {}
+  value(const mpq_class& val) : v(val) {}
 };
 
+value* operator/(const value& v, const value& t) {
+  return new value(v.v * t.v);
+}
 bool operator==(const value& v, const int t) {
   return cmp(v.v, t) == 0;
+}
+
+bool operator<(const value& v, const value& t) {
+  return cmp(v.v, t.v) < 0;
+}
+
+bool operator>(const value& v, const value& t) {
+  return cmp(v.v, t.v) > 0;
 }
 
 bool operator>(const value& v, const int t) {
@@ -280,17 +291,42 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << endl;
   }
 
+  int next_pivot_col = -1;
+  value* old_ratio = new value(0);
   for (auto x : tab.non_basic_variables()) {
     value* c = tab.objective_coeff(x);
     cout << "a_" << x << " = " << *c << endl;
     if (*c > 0) {
       cout << "  " << "has positive coefficient" << endl;
-      int c = x;
+      //int c = x;
       for (int r = 1; r < tab.num_rows(); r++) {
         cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
-        value* ratio_val = *b / *c;
+        value* ratio_val = *(tab.constant(r)) / *c;
+        cout << "    ratio = " << *ratio_val << endl;
+        cout << "old ratio = " << *old_ratio << endl;
+        if (*ratio_val > *old_ratio) {
+          old_ratio = ratio_val;
+          next_pivot_col = x;
+        } else {
+          cout << *ratio_val << " <= " << *old_ratio << endl;
+        }
       }
     }
+  }
+
+  if (next_pivot_col == -1) {
+    cout << "No pivot row found" << endl;
+    assert(false);
+  }
+
+
+  cout << "next pivot col = " << next_pivot_col << endl;
+
+  for (int r = 1; r < tab.num_rows(); r++) {
+    value* b = tab.const_coeff(r);
+    value* c = tab.variable_coeff(r, next_pivot_col);
+    cout << "b = " << *b << endl;
+    cout << "c = " << *c << endl;
   }
 
   //int pivot_row = pick_pivot_row(tab);
