@@ -163,8 +163,16 @@ struct tableau {
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
 
+  value* const_coeff(const int row) const {
+    return constant(row);
+  }
+
   value* constant(const int row) const {
     return get_entry(row, num_cols() - 1);
+  }
+
+  value* variable_coeff(const int row, const int col) const {
+    return get_entry(row, col);
   }
 
   value* objective_coeff(const int col) const {
@@ -322,12 +330,20 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 
   cout << "next pivot col = " << next_pivot_col << endl;
 
+  value max(0);
+  int pivot_row = -1;
   for (int r = 1; r < tab.num_rows(); r++) {
     value* b = tab.const_coeff(r);
     value* c = tab.variable_coeff(r, next_pivot_col);
     cout << "b = " << *b << endl;
     cout << "c = " << *c << endl;
+    if (*b / *c > max) {
+      max = *b / *c;
+      pivot_row = r;
+    }
   }
+  cout << "Pivot row = " << pivot_row << endl;
+
 
   //int pivot_row = pick_pivot_row(tab);
   //cout << "pivot row = " << pivot_row << endl;
