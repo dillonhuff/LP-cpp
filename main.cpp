@@ -28,16 +28,16 @@ bool operator<(const value& v, const value& t) {
   return cmp(v.v, t.v) < 0;
 }
 
+bool operator<(const value& v, const int t) {
+  return cmp(v.v, t) < 0;
+}
+
 bool operator>(const value& v, const value& t) {
   return cmp(v.v, t.v) > 0;
 }
 
 bool operator>(const value& v, const int t) {
   return cmp(v.v, t) > 0;
-}
-
-bool operator<(const value& v, const int t) {
-  return cmp(v.v, t) < 0;
 }
 
 value* neg(value* v) {
@@ -337,8 +337,8 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     value* c = tab.variable_coeff(r, next_pivot_col);
     cout << "b = " << *b << endl;
     cout << "c = " << *c << endl;
-    if (*b / *c > max) {
-      max = *b / *c;
+    if (*(*b / *c) > max) {
+      max = *(*b / *c);
       pivot_row = r;
     }
   }
