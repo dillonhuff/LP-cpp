@@ -20,6 +20,7 @@ struct value {
 value* operator/(const value& v, const value& t) {
   return new value(v.v * t.v);
 }
+
 bool operator==(const value& v, const int t) {
   return cmp(v.v, t) == 0;
 }
@@ -162,6 +163,12 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 struct tableau {
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
+
+  void exchange(const int new_basic, const int old_basic) {
+    assert(elem(old_basic, basic_variables));
+    basic_variables.insert(new_basic);
+    basic_variables.erase(old_basic);
+  }
 
   value* const_coeff(const int row) const {
     return constant(row);
@@ -344,7 +351,22 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
   cout << "Pivot row = " << pivot_row << endl;
 
+  cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
+  int next_non_basic_var = -1;
+  bool found_nb = false;
+  for (int c = 0; c < tab.num_cols() - 1; c++) {
+    value* cv = tab.variable_coeff(pivot_row, c);
+    if (*cv == 1) {
+      next_non_basic_var = c;
+      found_nb = true;
+    }
+  }
+  cout << "--- Basic variable being replaced     : " << next_non_basic_var << endl;
+  assert(found_nb);
 
+  tab.scale_row(*ratio, next_pivot_row);
+
+  tab.exchange(next_pivot_col, next_non_basic_var);
   //int pivot_row = pick_pivot_row(tab);
   //cout << "pivot row = " << pivot_row << endl;
 
