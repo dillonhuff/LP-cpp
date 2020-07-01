@@ -9,6 +9,51 @@
 using namespace dbhc;
 using namespace std;
 
+template<typename T>
+class matrix {
+
+  vector<vector<T> > rows;
+
+  void scale_row(const T& factor, const int row) {
+    assert(row < num_rows());
+    for (int c = 0; c < num_cols(); c++) {
+      rows[row][c] = (rows[row][c]) * factor;
+    }
+  }
+
+  T operator()(const int row, const int col) {
+    return get_entry(row, col);
+  }
+
+  matrix(const int nrows, const int ncols) {
+    rows.resize(nrows);
+    for (auto& r : rows) {
+      r.resize(ncols);
+    }
+  }
+
+  int num_rows() const {
+    return rows.size();
+  }
+
+  int num_cols() const {
+    assert(num_rows() > 0);
+    return rows.at(0).size();
+  }
+
+  T get_entry(const int r, const int c) const {
+    assert(r < rows.size());
+    assert(c < rows[r].size());
+    return rows[r][c];
+  }
+
+  void set_entry(const int r, const int c, const T& v) {
+    assert(r < rows.size());
+    assert(c < rows[r].size());
+    rows[r][c] = v;
+  }
+};
+
 struct value {
   mpq_class v;
 
