@@ -17,8 +17,12 @@ struct value {
   value(const mpq_class& val) : v(val) {}
 };
 
-value* operator/(const value& v, const value& t) {
+value* operator*(const value& v, const value& t) {
   return new value(v.v * t.v);
+}
+
+value* operator/(const value& v, const value& t) {
+  return new value(v.v / t.v);
 }
 
 bool operator==(const value& v, const int t) {
@@ -163,6 +167,13 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 struct tableau {
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
+
+  void scale_row(const value& factor, const int row) {
+    assert(row < num_rows());
+    for (int c = 0; c < num_cols(); c++) {
+      rows[row][c] = *(rows[row][c]) * factor;
+    }
+  }
 
   void exchange(const int new_basic, const int old_basic) {
     assert(elem(old_basic, basic_variables));
@@ -364,7 +375,7 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "--- Basic variable being replaced     : " << next_non_basic_var << endl;
   assert(found_nb);
 
-  tab.scale_row(*ratio, next_pivot_row);
+  tab.scale_row(value(12), pivot_row);
 
   tab.exchange(next_pivot_col, next_non_basic_var);
   //int pivot_row = pick_pivot_row(tab);
