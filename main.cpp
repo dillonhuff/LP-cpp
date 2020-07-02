@@ -281,6 +281,15 @@ struct tableau {
     rows[r][c] = v;
   }
 
+  void print(std::ostream& out) {
+    for (int r = 0; r < num_rows(); r++) {
+      for (int c = 0; c < num_cols(); c++) {
+        cout << *get_entry(r, c) << " ";
+      }
+      cout << endl;
+    }
+  }
+
 };
 
 tableau build_initial_tableau(standard_form& form) {
@@ -407,6 +416,8 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
   cout << "Pivot row = " << pivot_row << endl;
 
+  assert(pivot_row >= 0);
+
   cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
   int next_non_basic_var = -1;
   bool found_nb = false;
@@ -423,6 +434,8 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   tab.scale_row(value(12), pivot_row);
 
   tab.exchange(next_pivot_col, next_non_basic_var);
+
+  tab.print(cout);
   //int pivot_row = pick_pivot_row(tab);
   //cout << "pivot row = " << pivot_row << endl;
 
@@ -440,8 +453,8 @@ int main() {
   sum->set_coeff(0, ctx.val_alloc(1));
 
   auto lc = ctx.linear_expr_alloc(1);
-  lc->set_coeff(0, ctx.val_alloc(1));
-  lc->set_const(ctx.val_alloc(1));
+  lc->set_coeff(0, ctx.val_alloc(-1));
+  lc->set_const(ctx.val_alloc(5));
 
   vector<linear_expr*> constraints{lc};
   value* result = maximize(sum, constraints);
