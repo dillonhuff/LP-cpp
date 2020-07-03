@@ -335,7 +335,7 @@ int pick_pivot_row(tableau& tab) {
 
 int pick_pivot_col(tableau& tab) {
   int next_pivot_col = -1;
-  value* old_ratio = new value(0);
+  value* min_obj_coeff = nullptr;
   for (auto x : tab.non_basic_variables()) {
     value* c = tab.objective_coeff(x);
     cout << "a_" << x << " = " << *c << endl;
