@@ -333,8 +333,36 @@ int pick_pivot_row(tableau& tab) {
   return pr;
 }
 
-int pick_pivot_col(const int pivot_row, tableau& tab) {
-  return 0;
+int pick_pivot_col(tableau& tab) {
+  int next_pivot_col = -1;
+  value* old_ratio = new value(0);
+  for (auto x : tab.non_basic_variables()) {
+    value* c = tab.objective_coeff(x);
+    cout << "a_" << x << " = " << *c << endl;
+    if (*c > 0) {
+      cout << "  " << "has positive coefficient" << endl;
+      //int c = x;
+      for (int r = 1; r < tab.num_rows(); r++) {
+        cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
+        value* ratio_val = *(tab.constant(r)) / *c;
+        cout << "    ratio = " << *ratio_val << endl;
+        cout << "old ratio = " << *old_ratio << endl;
+        if (*ratio_val > *old_ratio) {
+          old_ratio = ratio_val;
+          next_pivot_col = x;
+        } else {
+          cout << *ratio_val << " <= " << *old_ratio << endl;
+        }
+      }
+    }
+  }
+
+  if (next_pivot_col == -1) {
+    cout << "No pivot row found" << endl;
+    assert(false);
+  }
+
+  return next_pivot_col;
 }
 
 value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
@@ -371,35 +399,7 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << endl;
   }
 
-  int next_pivot_col = -1;
-  value* old_ratio = new value(0);
-  for (auto x : tab.non_basic_variables()) {
-    value* c = tab.objective_coeff(x);
-    cout << "a_" << x << " = " << *c << endl;
-    if (*c > 0) {
-      cout << "  " << "has positive coefficient" << endl;
-      //int c = x;
-      for (int r = 1; r < tab.num_rows(); r++) {
-        cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
-        value* ratio_val = *(tab.constant(r)) / *c;
-        cout << "    ratio = " << *ratio_val << endl;
-        cout << "old ratio = " << *old_ratio << endl;
-        if (*ratio_val > *old_ratio) {
-          old_ratio = ratio_val;
-          next_pivot_col = x;
-        } else {
-          cout << *ratio_val << " <= " << *old_ratio << endl;
-        }
-      }
-    }
-  }
-
-  if (next_pivot_col == -1) {
-    cout << "No pivot row found" << endl;
-    assert(false);
-  }
-
-
+  int next_pivot_col = pick_pivot_col(tab);
   cout << "next pivot col = " << next_pivot_col << endl;
 
   value max(0);
