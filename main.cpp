@@ -338,23 +338,27 @@ int pick_pivot_col(tableau& tab) {
   value* min_obj_coeff = nullptr;
   for (auto x : tab.non_basic_variables()) {
     value* c = tab.objective_coeff(x);
-    cout << "a_" << x << " = " << *c << endl;
-    if (*c > 0) {
-      cout << "  " << "has positive coefficient" << endl;
-      //int c = x;
-      for (int r = 1; r < tab.num_rows(); r++) {
-        cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
-        value* ratio_val = *(tab.constant(r)) / *c;
-        cout << "    ratio = " << *ratio_val << endl;
-        cout << "old ratio = " << *old_ratio << endl;
-        if (*ratio_val > *old_ratio) {
-          old_ratio = ratio_val;
-          next_pivot_col = x;
-        } else {
-          cout << *ratio_val << " <= " << *old_ratio << endl;
-        }
-      }
+    if (min_obj_coeff == nullptr || *c < *min_obj_coeff) {
+      min_obj_coeff = c;
+      next_pivot_col = x;
     }
+    //cout << "a_" << x << " = " << *c << endl;
+    //if (*c > 0) {
+      //cout << "  " << "has positive coefficient" << endl;
+      ////int c = x;
+      //for (int r = 1; r < tab.num_rows(); r++) {
+        //cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
+        //value* ratio_val = *(tab.constant(r)) / *c;
+        //cout << "    ratio = " << *ratio_val << endl;
+        //cout << "old ratio = " << *old_ratio << endl;
+        //if (*ratio_val > *old_ratio) {
+          //old_ratio = ratio_val;
+          //next_pivot_col = x;
+        //} else {
+          //cout << *ratio_val << " <= " << *old_ratio << endl;
+        //}
+      //}
+    //}
   }
 
   if (next_pivot_col == -1) {
@@ -419,21 +423,27 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   assert(pivot_row >= 0);
 
   cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
-  int next_non_basic_var = -1;
-  bool found_nb = false;
-  for (int c = 0; c < tab.num_cols() - 1; c++) {
-    value* cv = tab.variable_coeff(pivot_row, c);
-    if (*cv == 1) {
-      next_non_basic_var = c;
-      found_nb = true;
-    }
+  int next_pivot_row = -1;
+  for (int r = 1; r < tab.num_rows(); r++) {
+    next_pivot_row = r;
   }
-  cout << "--- Basic variable being replaced     : " << next_non_basic_var << endl;
-  assert(found_nb);
+  //int next_non_basic_var = -1;
+  //bool found_nb = false;
+  //for (int c = 0; c < tab.num_cols() - 1; c++) {
+    //value* cv = tab.variable_coeff(pivot_row, c);
+    //if (*cv == 1) {
+      //next_non_basic_var = c;
+      //found_nb = true;
+    //}
+  //}
+  //cout << "--- Basic variable being replaced     : " << next_non_basic_var << endl;
+  //assert(found_nb);
 
-  tab.scale_row(value(12), pivot_row);
+  auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
+  cout << "Pivot val = " << *pivot_val << endl;
+  tab.scale_row(*(value(1) / *pivot_val), pivot_row);
 
-  tab.exchange(next_pivot_col, next_non_basic_var);
+  //tab.exchange(next_pivot_col, next_non_basic_var);
 
   tab.print(cout);
   //int pivot_row = pick_pivot_row(tab);
