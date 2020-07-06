@@ -62,6 +62,10 @@ struct value {
   value(const mpq_class& val) : v(val) {}
 };
 
+value* operator-(const value& v, const value& t) {
+  return new value(v.v - t.v);
+}
+
 value* operator*(const value& v, const value& t) {
   return new value(v.v * t.v);
 }
@@ -212,6 +216,13 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 struct tableau {
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
+
+  void subtract_row(const std::vector<value*>& diffs, const int row) {
+    assert(diffs.size() == num_cols());
+    for (int c = 0; c < num_cols(); c++) {
+      set_entry(row, c, *get_entry(row, c) - *diffs.at(c));
+    }
+  }
 
   void scale_row(const value& factor, const int row) {
     assert(row < num_rows());
@@ -443,6 +454,16 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Pivot val = " << *pivot_val << endl;
   tab.scale_row(*(value(1) / *pivot_val), pivot_row);
 
+
+  for (int r = 0; r < tab.num_rows(); r++) {
+    if (r != next_pivot_row) {
+      vector<value*> muls;
+      for (int c = 0; c < tab.num_cols(); c++) {
+        muls.push_back(*tab.get_entry(r, c)* *tab.get_entry(pivot_row, c));
+      }
+      tab.subtract_row(muls, r);
+    }
+  }
   //tab.exchange(next_pivot_col, next_non_basic_var);
 
   tab.print(cout);
