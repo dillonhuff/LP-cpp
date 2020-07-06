@@ -347,29 +347,16 @@ int pick_pivot_row(tableau& tab) {
 int pick_pivot_col(tableau& tab) {
   int next_pivot_col = -1;
   value* min_obj_coeff = nullptr;
-  for (auto x : tab.non_basic_variables()) {
+
+  //for (auto x : tab.non_basic_variables()) {
+  for (int x = 0; x < tab.num_cols() - 1; x++) {
     value* c = tab.objective_coeff(x);
-    if (min_obj_coeff == nullptr || *c < *min_obj_coeff) {
-      min_obj_coeff = c;
-      next_pivot_col = x;
+    if (*c > 0) {
+      if (min_obj_coeff == nullptr || *c < *min_obj_coeff) {
+        min_obj_coeff = c;
+        next_pivot_col = x;
+      }
     }
-    //cout << "a_" << x << " = " << *c << endl;
-    //if (*c > 0) {
-      //cout << "  " << "has positive coefficient" << endl;
-      ////int c = x;
-      //for (int r = 1; r < tab.num_rows(); r++) {
-        //cout << "   " << "b_" << r << " = " << *tab.constant(r) << endl;
-        //value* ratio_val = *(tab.constant(r)) / *c;
-        //cout << "    ratio = " << *ratio_val << endl;
-        //cout << "old ratio = " << *old_ratio << endl;
-        //if (*ratio_val > *old_ratio) {
-          //old_ratio = ratio_val;
-          //next_pivot_col = x;
-        //} else {
-          //cout << *ratio_val << " <= " << *old_ratio << endl;
-        //}
-      //}
-    //}
   }
 
   if (next_pivot_col == -1) {
