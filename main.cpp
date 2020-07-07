@@ -332,23 +332,26 @@ tableau build_initial_tableau(standard_form& form) {
   return tab;
 }
 
-int pick_pivot_row(tableau& tab) {
-  int pr = 0;
-  value* min = new value(0);
-  for (int c = 0; c < tab.num_cols(); c++) {
-    if (*(tab.get_entry(tab.num_rows() - 1, c)) > 0) {
-      pr = c;
-      min = tab.get_entry(tab.num_rows() - 1, c);
+int pick_pivot_row(const int next_pivot_col, tableau& tab) {
+  value max(0);
+  int pivot_row = -1;
+  for (int r = 1; r < tab.num_rows(); r++) {
+    value* b = tab.const_coeff(r);
+    value* c = tab.variable_coeff(r, next_pivot_col);
+    cout << "b = " << *b << endl;
+    cout << "c = " << *c << endl;
+    if (pivot_row == -1 || *(*b / *c) > max) {
+      max = *(*b / *c);
+      pivot_row = r;
     }
   }
-  return pr;
+  return pivot_row;
 }
 
 int pick_pivot_col(tableau& tab) {
   int next_pivot_col = -1;
   value* min_obj_coeff = nullptr;
 
-  //for (auto x : tab.non_basic_variables()) {
   for (int x = 0; x < tab.num_cols() - 1; x++) {
     value* c = tab.objective_coeff(x);
     if (*c > 0) {
@@ -404,18 +407,7 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   int next_pivot_col = pick_pivot_col(tab);
   cout << "next pivot col = " << next_pivot_col << endl;
 
-  value max(0);
-  int pivot_row = -1;
-  for (int r = 1; r < tab.num_rows(); r++) {
-    value* b = tab.const_coeff(r);
-    value* c = tab.variable_coeff(r, next_pivot_col);
-    cout << "b = " << *b << endl;
-    cout << "c = " << *c << endl;
-    if (*(*b / *c) > max) {
-      max = *(*b / *c);
-      pivot_row = r;
-    }
-  }
+  int pivot_row = pick_pivot_row(next_pivot_col, tab);
   cout << "Pivot row = " << pivot_row << endl;
 
   assert(pivot_row >= 0);
