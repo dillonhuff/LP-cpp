@@ -370,6 +370,15 @@ int pick_pivot_col(tableau& tab) {
   return next_pivot_col;
 }
 
+bool can_improve(tableau& tab) {
+  for (int c = 0; c < tab.num_cols() - 1; c++) {
+    if (*tab.objective_coeff(c) > (int) 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
@@ -404,52 +413,37 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     cout << endl;
   }
 
-  int next_pivot_col = pick_pivot_col(tab);
-  cout << "next pivot col = " << next_pivot_col << endl;
+  while (can_improve(tab)) {
+    int next_pivot_col = pick_pivot_col(tab);
+    cout << "next pivot col = " << next_pivot_col << endl;
 
-  int pivot_row = pick_pivot_row(next_pivot_col, tab);
-  cout << "Pivot row = " << pivot_row << endl;
+    int pivot_row = pick_pivot_row(next_pivot_col, tab);
+    cout << "Pivot row = " << pivot_row << endl;
 
-  assert(pivot_row >= 0);
+    assert(pivot_row >= 0);
 
-  cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
-  int next_pivot_row = -1;
-  for (int r = 1; r < tab.num_rows(); r++) {
-    next_pivot_row = r;
-  }
-  //int next_non_basic_var = -1;
-  //bool found_nb = false;
-  //for (int c = 0; c < tab.num_cols() - 1; c++) {
-    //value* cv = tab.variable_coeff(pivot_row, c);
-    //if (*cv == 1) {
-      //next_non_basic_var = c;
-      //found_nb = true;
-    //}
-  //}
-  //cout << "--- Basic variable being replaced     : " << next_non_basic_var << endl;
-  //assert(found_nb);
-
-  auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-  cout << "Pivot val = " << *pivot_val << endl;
-  tab.scale_row(*(value(1) / *pivot_val), pivot_row);
-
-
-  for (int r = 0; r < tab.num_rows(); r++) {
-    if (r != next_pivot_row) {
-      vector<value*> muls;
-      for (int c = 0; c < tab.num_cols(); c++) {
-        muls.push_back(*tab.get_entry(r, c)* *tab.get_entry(pivot_row, c));
-      }
-      tab.subtract_row(muls, r);
+    cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
+    int next_pivot_row = -1;
+    for (int r = 1; r < tab.num_rows(); r++) {
+      next_pivot_row = r;
     }
+
+    auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
+    cout << "Pivot val = " << *pivot_val << endl;
+    tab.scale_row(*(value(1) / *pivot_val), pivot_row);
+
+    for (int r = 0; r < tab.num_rows(); r++) {
+      if (r != next_pivot_row) {
+        vector<value*> muls;
+        for (int c = 0; c < tab.num_cols(); c++) {
+          muls.push_back(*tab.get_entry(r, c)* *tab.get_entry(pivot_row, c));
+        }
+        tab.subtract_row(muls, r);
+      }
+    }
+
+    tab.print(cout);
   }
-  //tab.exchange(next_pivot_col, next_non_basic_var);
-
-  tab.print(cout);
-  //int pivot_row = pick_pivot_row(tab);
-  //cout << "pivot row = " << pivot_row << endl;
-
-  //int pivot_col = pick_pivot_col(pivot_row, tab);
 
 
   return nullptr;
