@@ -445,6 +445,15 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     tab.print(cout);
   }
 
+  cout << "Final tableau" << endl;
+  tab.print(cout);
+  for (int r = 1; r < tab.num_rows(); r++) {
+    for (int c = 0; c < tab.num_cols() - 1; c++) {
+      if (*tab.get_entry(r, c) == (int) 1) {
+        cout << "x_" << c << " = " << *(value(-1)*(*tab.const_coeff(r))) << endl;
+      }
+    }
+  }
 
   return nullptr;
 }
