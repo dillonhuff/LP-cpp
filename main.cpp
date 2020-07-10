@@ -66,6 +66,10 @@ value* operator-(const value& v, const value& t) {
   return new value(v.v - t.v);
 }
 
+value* operator+(const value& v, const value& t) {
+  return new value(v.v + t.v);
+}
+
 value* operator*(const value& v, const value& t) {
   return new value(v.v * t.v);
 }
@@ -447,15 +451,27 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 
   cout << "Final tableau" << endl;
   tab.print(cout);
+  vector<value*> variables;
   for (int r = 1; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols() - 1; c++) {
       if (*tab.get_entry(r, c) == (int) 1) {
-        cout << "x_" << c << " = " << *(value(-1)*(*tab.const_coeff(r))) << endl;
+        auto val = (value(-1)*(*tab.const_coeff(r)));
+        cout << "x_" << c << " = " << *val << endl;
+        variables.push_back(val);
+      } else {
+        variables.push_back(new value(0));
       }
     }
   }
 
-  return nullptr;
+  cout << "Variable values..." << endl;
+  value* obj = new value(0);
+  for (int i = 0; i < variables.size(); i++) {
+    cout << "coeff = " << *(tab.objective_coeff(i)) << endl;
+    obj = *obj + *(*(variables.at(i)) * *(tab.objective_coeff(i)));
+    cout << "obj = " << *obj << endl;
+  }
+  return obj;
 }
 
 int main() {
@@ -471,6 +487,9 @@ int main() {
 
   vector<linear_expr*> constraints{lc};
   value* result = maximize(sum, constraints);
+
+  assert(result != nullptr);
+  assert(*result == 5);
 
   cout << "Done" << endl;
 }
