@@ -220,7 +220,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 struct tableau {
   value maximum;
   std::set<int> basic_variables;
-  vector<vector<value*> > rows;
+  vector<vector<value> > rows;
 
   void subtract_row(const std::vector<value*>& diffs, const int row) {
     assert(diffs.size() == num_cols());
@@ -232,7 +232,7 @@ struct tableau {
   void scale_row(const value& factor, const int row) {
     assert(row < num_rows());
     for (int c = 0; c < num_cols(); c++) {
-      rows[row][c] = *(rows[row][c]) * factor;
+      rows[row][c] = *((rows[row][c]) * factor);
     }
   }
 
@@ -289,13 +289,13 @@ struct tableau {
   value* get_entry(const int r, const int c) const {
     assert(r < rows.size());
     assert(c < rows[r].size());
-    return rows[r][c];
+    return new value(rows[r][c].v);
   }
 
   void set_entry(const int r, const int c, value* v) {
     assert(r < rows.size());
     assert(c < rows[r].size());
-    rows[r][c] = v;
+    rows[r][c] = *v;
   }
 
   void print(std::ostream& out) {
