@@ -218,7 +218,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 }
 
 struct tableau {
-  value* maximum;
+  value maximum;
   std::set<int> basic_variables;
   vector<vector<value*> > rows;
 
@@ -270,7 +270,7 @@ struct tableau {
   }
 
   tableau(const int nrows, const int ncols) {
-    maximum = new value(0);
+    maximum = value(0);
     rows.resize(nrows);
     for (auto& r : rows) {
       r.resize(ncols);
@@ -385,7 +385,7 @@ bool can_improve(tableau& tab) {
   return false;
 }
 
-value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
+value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
@@ -435,9 +435,9 @@ value* maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     }
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    tab.maximum = *(tab.maximum) - *(*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val));
+    tab.maximum = *(tab.maximum - *(*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
     cout << "Pivot val = " << *pivot_val << endl;
-    cout << "New max   = " << *(tab.maximum) << endl;
+    cout << "New max   = " << (tab.maximum) << endl;
     tab.scale_row(*(value(1) / *pivot_val), pivot_row);
 
     for (int r = 0; r < tab.num_rows(); r++) {
@@ -483,10 +483,9 @@ int main() {
   lc->set_const(ctx.val_alloc(5));
 
   vector<linear_expr*> constraints{lc};
-  value* result = maximize(sum, constraints);
+  value result = maximize(sum, constraints);
 
-  assert(result != nullptr);
-  assert(*result == 5);
+  assert(result == 5);
 
   cout << "Done" << endl;
 }
