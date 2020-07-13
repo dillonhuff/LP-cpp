@@ -471,7 +471,7 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   return tab.maximum;
 }
 
-int main() {
+void basic_test() {
   context ctx;
 
   auto a = ctx.basic_set_alloc(2);
@@ -487,6 +487,17 @@ int main() {
 
   assert(result == 5);
 
-  cout << "Done" << endl;
+  cout << "BASIC TEST Passed" << endl;
+}
+
+void ft_test() {
+  context ctx;
+
+
+}
+
+int main() {
+  basic_test();
+  ft_test();
 }
 
