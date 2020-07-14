@@ -66,12 +66,12 @@ value operator-(const value& v, const value& t) {
   return value(v.v - t.v);
 }
 
-value* operator+(const value& v, const value& t) {
-  return new value(v.v + t.v);
+value operator+(const value& v, const value& t) {
+  return value(v.v + t.v);
 }
 
-value* operator*(const value& v, const value& t) {
-  return new value(v.v * t.v);
+value operator*(const value& v, const value& t) {
+  return value(v.v * t.v);
 }
 
 value* operator/(const value& v, const value& t) {
@@ -222,17 +222,17 @@ struct tableau {
   std::set<int> basic_variables;
   vector<vector<value> > rows;
 
-  void subtract_row(const std::vector<value*>& diffs, const int row) {
+  void subtract_row(const std::vector<value>& diffs, const int row) {
     assert(diffs.size() == num_cols());
     for (int c = 0; c < num_cols(); c++) {
-      set_entry(row, c, *get_entry(row, c) - *diffs.at(c));
+      set_entry(row, c, *get_entry(row, c) - diffs.at(c));
     }
   }
 
   void scale_row(const value& factor, const int row) {
     assert(row < num_rows());
     for (int c = 0; c < num_cols(); c++) {
-      rows[row][c] = *((rows[row][c]) * factor);
+      rows[row][c] = (rows[row][c]) * factor;
     }
   }
 
@@ -435,16 +435,16 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     }
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    tab.maximum = (tab.maximum - *(*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
+    tab.maximum = (tab.maximum - (*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
     cout << "Pivot val = " << *pivot_val << endl;
     cout << "New max   = " << (tab.maximum) << endl;
     tab.scale_row(*(value(1) / *pivot_val), pivot_row);
 
     for (int r = 0; r < tab.num_rows(); r++) {
       if (r != next_pivot_row) {
-        vector<value*> muls;
+        vector<value> muls;
         for (int c = 0; c < tab.num_cols(); c++) {
-          muls.push_back(*tab.get_entry(r, c)* *tab.get_entry(pivot_row, c));
+          muls.push_back(*tab.get_entry(r, c) * *tab.get_entry(pivot_row, c));
         }
         tab.subtract_row(muls, r);
       }
@@ -455,19 +455,6 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 
   cout << "Final tableau" << endl;
   tab.print(cout);
-  vector<value*> variables;
-  for (int r = 1; r < tab.num_rows(); r++) {
-    for (int c = 0; c < tab.num_cols() - 1; c++) {
-      if (*tab.get_entry(r, c) == (int) 1) {
-        auto val = (value(-1)*(*tab.const_coeff(r)));
-        cout << "x_" << c << " = " << *val << endl;
-        variables.push_back(val);
-      } else {
-        variables.push_back(new value(0));
-      }
-    }
-  }
-
   return tab.maximum;
 }
 
