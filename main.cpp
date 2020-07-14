@@ -62,8 +62,8 @@ struct value {
   value(const mpq_class& val) : v(val) {}
 };
 
-value* operator-(const value& v, const value& t) {
-  return new value(v.v - t.v);
+value operator-(const value& v, const value& t) {
+  return value(v.v - t.v);
 }
 
 value* operator+(const value& v, const value& t) {
@@ -292,10 +292,10 @@ struct tableau {
     return new value(rows[r][c].v);
   }
 
-  void set_entry(const int r, const int c, value* v) {
+  void set_entry(const int r, const int c, const value& v) {
     assert(r < rows.size());
     assert(c < rows[r].size());
-    rows[r][c] = *v;
+    rows[r][c] = v;
   }
 
   void print(std::ostream& out) {
@@ -323,16 +323,16 @@ tableau build_initial_tableau(standard_form& form) {
 
   int r = 0;
   for (int d = 0; d < form.objective->dimension(); d++) {
-    tab.set_entry(r, d, form.objective->get_coeff(d));
+    tab.set_entry(r, d, *form.objective->get_coeff(d));
   }
-  tab.set_entry(r, ncols - 1, form.objective->get_const());
+  tab.set_entry(r, ncols - 1, *form.objective->get_const());
 
   r++;
   for (auto c : form.equalities) {
     for (int d = 0; d < c->dimension(); d++) {
-      tab.set_entry(r, d, c->get_coeff(d));
+      tab.set_entry(r, d, *c->get_coeff(d));
     }
-    tab.set_entry(r, ncols - 1, c->get_const());
+    tab.set_entry(r, ncols - 1, *c->get_const());
     r++;
   }
   return tab;
@@ -435,7 +435,7 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     }
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    tab.maximum = *(tab.maximum - *(*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
+    tab.maximum = (tab.maximum - *(*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
     cout << "Pivot val = " << *pivot_val << endl;
     cout << "New max   = " << (tab.maximum) << endl;
     tab.scale_row(*(value(1) / *pivot_val), pivot_row);
