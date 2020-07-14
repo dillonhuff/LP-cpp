@@ -225,7 +225,7 @@ struct tableau {
   void subtract_row(const std::vector<value>& diffs, const int row) {
     assert(diffs.size() == num_cols());
     for (int c = 0; c < num_cols(); c++) {
-      set_entry(row, c, *get_entry(row, c) - diffs.at(c));
+      set_entry(row, c, get_entry(row, c) - diffs.at(c));
     }
   }
 
@@ -242,19 +242,19 @@ struct tableau {
     basic_variables.erase(old_basic);
   }
 
-  value* const_coeff(const int row) const {
+  value const_coeff(const int row) const {
     return constant(row);
   }
 
-  value* constant(const int row) const {
+  value constant(const int row) const {
     return get_entry(row, num_cols() - 1);
   }
 
-  value* variable_coeff(const int row, const int col) const {
+  value variable_coeff(const int row, const int col) const {
     return get_entry(row, col);
   }
 
-  value* objective_coeff(const int col) const {
+  value objective_coeff(const int col) const {
     return get_entry(0, col);
   }
 
@@ -286,10 +286,10 @@ struct tableau {
     return rows.at(0).size();
   }
 
-  value* get_entry(const int r, const int c) const {
+  value get_entry(const int r, const int c) const {
     assert(r < rows.size());
     assert(c < rows[r].size());
-    return new value(rows[r][c].v);
+    return value(rows[r][c].v);
   }
 
   void set_entry(const int r, const int c, const value& v) {
@@ -301,7 +301,7 @@ struct tableau {
   void print(std::ostream& out) {
     for (int r = 0; r < num_rows(); r++) {
       for (int c = 0; c < num_cols(); c++) {
-        cout << *get_entry(r, c) << " ";
+        cout << get_entry(r, c) << " ";
       }
       cout << endl;
     }
@@ -342,12 +342,12 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
   value max(0);
   int pivot_row = -1;
   for (int r = 1; r < tab.num_rows(); r++) {
-    value* b = tab.const_coeff(r);
-    value* c = tab.variable_coeff(r, next_pivot_col);
-    cout << "b = " << *b << endl;
-    cout << "c = " << *c << endl;
-    if (pivot_row == -1 || (*b / *c) > max) {
-      max = (*b / *c);
+    value b = tab.const_coeff(r);
+    value c = tab.variable_coeff(r, next_pivot_col);
+    cout << "b = " << b << endl;
+    cout << "c = " << c << endl;
+    if (pivot_row == -1 || (b / c) > max) {
+      max = (b / c);
       pivot_row = r;
     }
   }
@@ -356,12 +356,13 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
 
 int pick_pivot_col(tableau& tab) {
   int next_pivot_col = -1;
-  value* min_obj_coeff = nullptr;
+
+  value min_obj_coeff(-1);
 
   for (int x = 0; x < tab.num_cols() - 1; x++) {
-    value* c = tab.objective_coeff(x);
-    if (*c > 0) {
-      if (min_obj_coeff == nullptr || *c < *min_obj_coeff) {
+    value c = tab.objective_coeff(x);
+    if (c > 0) {
+      if (min_obj_coeff < 0 || c < min_obj_coeff) {
         min_obj_coeff = c;
         next_pivot_col = x;
       }
@@ -378,7 +379,7 @@ int pick_pivot_col(tableau& tab) {
 
 bool can_improve(tableau& tab) {
   for (int c = 0; c < tab.num_cols() - 1; c++) {
-    if (*tab.objective_coeff(c) > (int) 0) {
+    if (tab.objective_coeff(c) > (int) 0) {
       return true;
     }
   }
@@ -414,7 +415,7 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
   }
   for (int r = 0; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols(); c++) {
-      cout << *(tab.get_entry(r, c)) << " ";
+      cout << (tab.get_entry(r, c)) << " ";
     }
     cout << endl;
   }
@@ -435,16 +436,16 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     }
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    tab.maximum = (tab.maximum - (*(tab.objective_coeff(next_pivot_col)) * (*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
-    cout << "Pivot val = " << *pivot_val << endl;
+    tab.maximum = tab.maximum - ((tab.objective_coeff(next_pivot_col)) * ((tab.const_coeff(next_pivot_row)) / pivot_val));
+    cout << "Pivot val = " << pivot_val << endl;
     cout << "New max   = " << (tab.maximum) << endl;
-    tab.scale_row((value(1) / *pivot_val), pivot_row);
+    tab.scale_row((value(1) / pivot_val), pivot_row);
 
     for (int r = 0; r < tab.num_rows(); r++) {
       if (r != next_pivot_row) {
         vector<value> muls;
         for (int c = 0; c < tab.num_cols(); c++) {
-          muls.push_back(*tab.get_entry(r, c) * *tab.get_entry(pivot_row, c));
+          muls.push_back(tab.get_entry(r, c) * tab.get_entry(pivot_row, c));
         }
         tab.subtract_row(muls, r);
       }
