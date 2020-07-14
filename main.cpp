@@ -74,8 +74,8 @@ value operator*(const value& v, const value& t) {
   return value(v.v * t.v);
 }
 
-value* operator/(const value& v, const value& t) {
-  return new value(v.v / t.v);
+value operator/(const value& v, const value& t) {
+  return value(v.v / t.v);
 }
 
 bool operator==(const value& v, const int t) {
@@ -346,8 +346,8 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
     value* c = tab.variable_coeff(r, next_pivot_col);
     cout << "b = " << *b << endl;
     cout << "c = " << *c << endl;
-    if (pivot_row == -1 || *(*b / *c) > max) {
-      max = *(*b / *c);
+    if (pivot_row == -1 || (*b / *c) > max) {
+      max = (*b / *c);
       pivot_row = r;
     }
   }
@@ -435,10 +435,10 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
     }
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    tab.maximum = (tab.maximum - (*(tab.objective_coeff(next_pivot_col)) * *(*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
+    tab.maximum = (tab.maximum - (*(tab.objective_coeff(next_pivot_col)) * (*(tab.const_coeff(next_pivot_row)) / *pivot_val)));
     cout << "Pivot val = " << *pivot_val << endl;
     cout << "New max   = " << (tab.maximum) << endl;
-    tab.scale_row(*(value(1) / *pivot_val), pivot_row);
+    tab.scale_row((value(1) / *pivot_val), pivot_row);
 
     for (int r = 0; r < tab.num_rows(); r++) {
       if (r != next_pivot_row) {
