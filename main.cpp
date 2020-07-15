@@ -179,20 +179,20 @@ struct context {
 };
 
 struct standard_form {
-  linear_expr* objective;
-  vector<linear_expr*> equalities;
+  linear_expr objective;
+  vector<linear_expr> equalities;
   int num_base_vars;
   int num_slack_vars;
 };
 
-standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& constraints) {
+standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>& constraints) {
   standard_form form;
 
   form.num_slack_vars = constraints.size();
   form.num_base_vars = 2*obj->dimension();
   int standard_dim = form.num_slack_vars + form.num_base_vars;
 
-  form.objective = new linear_expr(standard_dim);
+  form.objective = linear_expr(standard_dim);
   for (int d = 0; d < obj->dimension(); d++) {
     form.objective->set_coeff(2*d, obj->get_coeff(d));
     form.objective->set_coeff(2*d + 1, neg(obj->get_coeff(d)));
@@ -200,7 +200,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
 
   int slack_offset = form.num_base_vars;
   for (auto c : constraints) {
-    auto cs = new linear_expr(standard_dim);
+    auto cs = linear_expr(standard_dim);
     for (int d = 0; d < c->dimension(); d++) {
       cs->set_coeff(2*d, c->get_coeff(d));
       cs->set_coeff(2*d + 1, neg(c->get_coeff(d)));
@@ -322,17 +322,17 @@ tableau build_initial_tableau(standard_form& form) {
   assert(tab.basic_variables.size() == form.equalities.size());
 
   int r = 0;
-  for (int d = 0; d < form.objective->dimension(); d++) {
-    tab.set_entry(r, d, form.objective->get_coeff(d));
+  for (int d = 0; d < form.objective.dimension(); d++) {
+    tab.set_entry(r, d, form.objective.get_coeff(d));
   }
-  tab.set_entry(r, ncols - 1, form.objective->get_const());
+  tab.set_entry(r, ncols - 1, form.objective.get_const());
 
   r++;
   for (auto c : form.equalities) {
-    for (int d = 0; d < c->dimension(); d++) {
-      tab.set_entry(r, d, c->get_coeff(d));
+    for (int d = 0; d < c.dimension(); d++) {
+      tab.set_entry(r, d, c.get_coeff(d));
     }
-    tab.set_entry(r, ncols - 1, c->get_const());
+    tab.set_entry(r, ncols - 1, c.get_const());
     r++;
   }
   return tab;
@@ -386,19 +386,19 @@ bool can_improve(tableau& tab) {
   return false;
 }
 
-value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
+value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   cout << "Maximizing : " << *sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
-    cout << "  " << *c << " >= 0" << endl;
+    cout << "  " << c << " >= 0" << endl;
   }
 
   standard_form sf = to_standard_form(sum, constraints);
   cout << "Standard form..." << endl;
-  cout << "  " << *(sf.objective) << endl;
+  cout << "  " << (sf.objective) << endl;
   cout << "st" << endl;
   for (auto c : sf.equalities) {
-    cout << "  " << *c << " = 0" << endl;
+    cout << "  " << c << " = 0" << endl;
   }
 
   tableau tab = build_initial_tableau(sf);
@@ -462,14 +462,14 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 void basic_test() {
   context ctx;
 
-  auto sum = ctx.linear_expr_alloc(1);
-  sum->set_coeff(0, value(1));
+  linear_expr sum(1);
+  sum.set_coeff(0, value(1));
 
-  auto lc = ctx.linear_expr_alloc(1);
-  lc->set_coeff(0, value(-1));
-  lc->set_const(value(5));
+  linear_expr lc(1);
+  lc.set_coeff(0, value(-1));
+  lc.set_const(value(5));
 
-  vector<linear_expr*> constraints{lc};
+  vector<linear_expr> constraints{lc};
   value result = maximize(sum, constraints);
 
   assert(result == 5);
@@ -478,8 +478,6 @@ void basic_test() {
 }
 
 void ft_test() {
-  context ctx;
-
 
 }
 
