@@ -98,8 +98,8 @@ bool operator>(const value& v, const int t) {
   return cmp(v.v, t) > 0;
 }
 
-value* neg(value* v) {
-  return new value(-(v->v));
+value neg(const value v) {
+  return value(-(v.v));
 }
 
 struct point {
@@ -107,15 +107,15 @@ struct point {
 };
 
 struct linear_expr {
-  std::vector<value*> coeffs;
-  value* constant;
+  std::vector<value> coeffs;
+  value constant;
 
   linear_expr(const int dimension) {
     coeffs.resize(dimension);
     for (int i = 0; i < dimension; i++) {
-      coeffs[i] = new value(0);
+      coeffs[i] = value(0);
     }
-    constant = new value(0);
+    constant = value(0);
   }
 
   int dimension() const {
@@ -123,20 +123,20 @@ struct linear_expr {
   }
 
 
-  void set_const(value* const v) {
+  void set_const(const value& v) {
     constant = v;
   }
 
-  value* get_const() {
+  value get_const() {
     return constant;
   }
 
-  value* get_coeff(const int dim) {
+  value get_coeff(const int dim) {
     assert(dim < dimension());
     return coeffs.at(dim);
   }
 
-  void set_coeff(const int dim, value* const v) {
+  void set_coeff(const int dim, const value& v) {
     coeffs[dim] = v;
   }
 };
@@ -151,10 +151,10 @@ std::ostream& operator<<(std::ostream& out, const linear_expr& e) {
     if (i > 0) {
       out << " + ";
     }
-    out << *(e.coeffs.at(i)) << " x_" << i;
+    out << (e.coeffs.at(i)) << " x_" << i;
   }
 
-  out << " + " << *(e.constant);
+  out << " + " << (e.constant);
   return out;
 }
 
@@ -206,7 +206,7 @@ standard_form to_standard_form(linear_expr* obj, const vector<linear_expr*>& con
       cs->set_coeff(2*d + 1, neg(c->get_coeff(d)));
     }
 
-    cs->set_coeff(slack_offset, new value(1));
+    cs->set_coeff(slack_offset, value(1));
 
     cs->set_const(c->get_const());
 
@@ -323,16 +323,16 @@ tableau build_initial_tableau(standard_form& form) {
 
   int r = 0;
   for (int d = 0; d < form.objective->dimension(); d++) {
-    tab.set_entry(r, d, *form.objective->get_coeff(d));
+    tab.set_entry(r, d, form.objective->get_coeff(d));
   }
-  tab.set_entry(r, ncols - 1, *form.objective->get_const());
+  tab.set_entry(r, ncols - 1, form.objective->get_const());
 
   r++;
   for (auto c : form.equalities) {
     for (int d = 0; d < c->dimension(); d++) {
-      tab.set_entry(r, d, *c->get_coeff(d));
+      tab.set_entry(r, d, c->get_coeff(d));
     }
-    tab.set_entry(r, ncols - 1, *c->get_const());
+    tab.set_entry(r, ncols - 1, c->get_const());
     r++;
   }
   return tab;
@@ -462,13 +462,12 @@ value maximize(linear_expr* sum, const vector<linear_expr*>& constraints) {
 void basic_test() {
   context ctx;
 
-  auto a = ctx.basic_set_alloc(2);
   auto sum = ctx.linear_expr_alloc(1);
-  sum->set_coeff(0, ctx.val_alloc(1));
+  sum->set_coeff(0, value(1));
 
   auto lc = ctx.linear_expr_alloc(1);
-  lc->set_coeff(0, ctx.val_alloc(-1));
-  lc->set_const(ctx.val_alloc(5));
+  lc->set_coeff(0, value(-1));
+  lc->set_const(value(5));
 
   vector<linear_expr*> constraints{lc};
   value result = maximize(sum, constraints);
