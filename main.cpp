@@ -110,6 +110,11 @@ struct linear_expr {
   std::vector<value> coeffs;
   value constant;
 
+  linear_expr() {
+    coeffs.resize(0);
+    constant = value(0);
+  }
+
   linear_expr(const int dimension) {
     coeffs.resize(dimension);
     for (int i = 0; i < dimension; i++) {
@@ -131,7 +136,7 @@ struct linear_expr {
     return constant;
   }
 
-  value get_coeff(const int dim) {
+  value get_coeff(const int dim) const {
     assert(dim < dimension());
     return coeffs.at(dim);
   }
@@ -189,26 +194,26 @@ standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>
   standard_form form;
 
   form.num_slack_vars = constraints.size();
-  form.num_base_vars = 2*obj->dimension();
+  form.num_base_vars = 2*obj.dimension();
   int standard_dim = form.num_slack_vars + form.num_base_vars;
 
   form.objective = linear_expr(standard_dim);
-  for (int d = 0; d < obj->dimension(); d++) {
-    form.objective->set_coeff(2*d, obj->get_coeff(d));
-    form.objective->set_coeff(2*d + 1, neg(obj->get_coeff(d)));
+  for (int d = 0; d < obj.dimension(); d++) {
+    form.objective.set_coeff(2*d, obj.get_coeff(d));
+    form.objective.set_coeff(2*d + 1, neg(obj.get_coeff(d)));
   }
 
   int slack_offset = form.num_base_vars;
   for (auto c : constraints) {
     auto cs = linear_expr(standard_dim);
-    for (int d = 0; d < c->dimension(); d++) {
-      cs->set_coeff(2*d, c->get_coeff(d));
-      cs->set_coeff(2*d + 1, neg(c->get_coeff(d)));
+    for (int d = 0; d < c.dimension(); d++) {
+      cs.set_coeff(2*d, c.get_coeff(d));
+      cs.set_coeff(2*d + 1, neg(c.get_coeff(d)));
     }
 
-    cs->set_coeff(slack_offset, value(1));
+    cs.set_coeff(slack_offset, value(1));
 
-    cs->set_const(c->get_const());
+    cs.set_const(c.get_const());
 
     form.equalities.push_back(cs);
     slack_offset++;
@@ -387,7 +392,7 @@ bool can_improve(tableau& tab) {
 }
 
 value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
-  cout << "Maximizing : " << *sum << endl;
+  cout << "Maximizing : " << sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
     cout << "  " << c << " >= 0" << endl;
