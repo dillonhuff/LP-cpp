@@ -366,7 +366,7 @@ int pick_pivot_col(tableau& tab) {
 
   for (int x = 0; x < tab.num_cols() - 1; x++) {
     value c = tab.objective_coeff(x);
-    if (c > 0) {
+    if (c < 0) {
       if (min_obj_coeff < 0 || c < min_obj_coeff) {
         min_obj_coeff = c;
         next_pivot_col = x;
@@ -384,7 +384,7 @@ int pick_pivot_col(tableau& tab) {
 
 bool can_improve(tableau& tab) {
   for (int c = 0; c < tab.num_cols() - 1; c++) {
-    if (tab.objective_coeff(c) > (int) 0) {
+    if (tab.objective_coeff(c) < (int) 0) {
       return true;
     }
   }
@@ -428,6 +428,14 @@ value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   while (can_improve(tab)) {
     int next_pivot_col = pick_pivot_col(tab);
     cout << "next pivot col = " << next_pivot_col << endl;
+    bool unbounded = true;
+    for (int r = 0; r < tab.num_rows(); r++) {
+      if (tab.get_entry(r, next_pivot_col) > 0) {
+        unbounded = false;
+        break;
+      }
+    }
+    assert(!unbounded);
 
     int pivot_row = pick_pivot_row(next_pivot_col, tab);
     cout << "Pivot row = " << pivot_row << endl;
@@ -465,8 +473,6 @@ value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
 }
 
 void basic_test() {
-  context ctx;
-
   linear_expr sum(1);
   sum.set_coeff(0, value(1));
 
@@ -483,11 +489,40 @@ void basic_test() {
 }
 
 void ft_test() {
+  linear_expr sum(1);
+  sum.set_coeff(0, value(1));
 
+  linear_expr lc(1);
+  lc.set_coeff(0, value(-2));
+  lc.set_const(value(60));
+
+  vector<linear_expr> constraints{lc};
+  value result = maximize(sum, constraints);
+
+  assert(result == 30);
+
+  cout << "Non-unity coefficient test passed" << endl;
+}
+
+void degenerate_test() {
+  linear_expr sum(1);
+  sum.set_coeff(0, value(1));
+
+  linear_expr lc(1);
+  lc.set_coeff(0, value(1));
+  lc.set_const(value(5));
+
+  vector<linear_expr> constraints{lc};
+  value result = maximize(sum, constraints);
+
+  assert(result == 5);
+
+  cout << "Degenerate test passed" << endl;
 }
 
 int main() {
   basic_test();
   ft_test();
+  degenerate_test();
 }
 
