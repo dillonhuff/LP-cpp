@@ -535,9 +535,27 @@ void unbounded_test() {
   cout << "Unbounded test passed" << endl;
 }
 
+void no_solution_test() {
+  linear_expr sum(1);
+  sum.set_coeff(0, value(1));
+
+  linear_expr lc(1);
+  lc.set_coeff(0, value(1));
+  lc.set_const(value(5));
+
+  linear_expr cc(1);
+  lc.set_coeff(0, value(-1));
+  lc.set_const(value(-6));
+
+  lp_result result = maximize(sum, {lc, cc});
+
+  cout << "No solution test" << endl;
+}
+
 int main() {
   basic_test();
   ft_test();
   unbounded_test();
+  no_solution_test();
 }
 
