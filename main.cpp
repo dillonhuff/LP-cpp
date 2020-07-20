@@ -391,7 +391,17 @@ bool can_improve(tableau& tab) {
   return false;
 }
 
-value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
+enum lp_result_type {
+  LP_RESULT_TYPE_OPTIMAL,
+  LP_RESULT_TYPE_UNBOUNDED
+};
+
+struct lp_result {
+  value val;
+  lp_result_type tp;
+};
+
+lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   cout << "Maximizing : " << sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
@@ -435,7 +445,10 @@ value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
         break;
       }
     }
-    assert(!unbounded);
+
+    if (unbounded) {
+      return {0, LP_RESULT_TYPE_UNBOUNDED};
+    }
 
     int pivot_row = pick_pivot_row(next_pivot_col, tab);
     cout << "Pivot row = " << pivot_row << endl;
@@ -469,7 +482,7 @@ value maximize(linear_expr sum, const vector<linear_expr>& constraints) {
 
   cout << "Final tableau" << endl;
   tab.print(cout);
-  return tab.maximum;
+  return {tab.maximum, LP_RESULT_TYPE_OPTIMAL};
 }
 
 void basic_test() {
@@ -481,9 +494,10 @@ void basic_test() {
   lc.set_const(value(5));
 
   vector<linear_expr> constraints{lc};
-  value result = maximize(sum, constraints);
+  lp_result result = maximize(sum, constraints);
 
-  assert(result == 5);
+  assert(result.val == 5);
+  assert(result.tp == LP_RESULT_TYPE_OPTIMAL);
 
   cout << "BASIC TEST Passed" << endl;
 }
@@ -497,14 +511,15 @@ void ft_test() {
   lc.set_const(value(60));
 
   vector<linear_expr> constraints{lc};
-  value result = maximize(sum, constraints);
+  lp_result result = maximize(sum, constraints);
 
-  assert(result == 30);
+  assert(result.val == 30);
+  assert(result.tp == LP_RESULT_TYPE_OPTIMAL);
 
   cout << "Non-unity coefficient test passed" << endl;
 }
 
-void degenerate_test() {
+void unbounded_test() {
   linear_expr sum(1);
   sum.set_coeff(0, value(1));
 
@@ -513,16 +528,16 @@ void degenerate_test() {
   lc.set_const(value(5));
 
   vector<linear_expr> constraints{lc};
-  value result = maximize(sum, constraints);
+  lp_result result = maximize(sum, constraints);
 
-  assert(result == 5);
+  assert(result.tp == LP_RESULT_TYPE_UNBOUNDED);
 
-  cout << "Degenerate test passed" << endl;
+  cout << "Unbounded test passed" << endl;
 }
 
 int main() {
   basic_test();
   ft_test();
-  degenerate_test();
+  unbounded_test();
 }
 
