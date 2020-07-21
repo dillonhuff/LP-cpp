@@ -62,24 +62,12 @@ struct value {
   value(const mpq_class& val) : v(val) {}
 };
 
-value operator-(const value& v, const value& t) {
-  return value(v.v - t.v);
-}
-
-value operator+(const value& v, const value& t) {
-  return value(v.v + t.v);
-}
-
-value operator*(const value& v, const value& t) {
-  return value(v.v * t.v);
-}
-
-value operator/(const value& v, const value& t) {
-  return value(v.v / t.v);
-}
-
 bool operator==(const value& v, const int t) {
   return cmp(v.v, t) == 0;
+}
+
+bool operator!=(const value& v, const int t) {
+  return !(v == t);
 }
 
 bool operator<(const value& v, const value& t) {
@@ -96,6 +84,23 @@ bool operator>(const value& v, const value& t) {
 
 bool operator>(const value& v, const int t) {
   return cmp(v.v, t) > 0;
+}
+
+value operator-(const value& v, const value& t) {
+  return value(v.v - t.v);
+}
+
+value operator+(const value& v, const value& t) {
+  return value(v.v + t.v);
+}
+
+value operator*(const value& v, const value& t) {
+  return value(v.v * t.v);
+}
+
+value operator/(const value& v, const value& t) {
+  assert(t != 0);
+  return value(v.v / t.v);
 }
 
 value neg(const value v) {
@@ -344,16 +349,19 @@ tableau build_initial_tableau(standard_form& form) {
 }
 
 int pick_pivot_row(const int next_pivot_col, tableau& tab) {
+  cout << "picking pivot row for " << next_pivot_col << endl;
   value max(0);
   int pivot_row = -1;
   for (int r = 1; r < tab.num_rows(); r++) {
     value b = tab.const_coeff(r);
     value c = tab.variable_coeff(r, next_pivot_col);
-    cout << "b = " << b << endl;
-    cout << "c = " << c << endl;
-    if (pivot_row == -1 || (b / c) > max) {
-      max = (b / c);
-      pivot_row = r;
+    if (c > 0) {
+      cout << "b = " << b << endl;
+      cout << "c = " << c << endl;
+      if (pivot_row == -1 || (b / c) > max) {
+        max = (b / c);
+        pivot_row = r;
+      }
     }
   }
   return pivot_row;
@@ -455,13 +463,18 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
 
     assert(pivot_row >= 0);
 
+    int next_pivot_row = pivot_row;
     cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
-    int next_pivot_row = -1;
-    for (int r = 1; r < tab.num_rows(); r++) {
-      next_pivot_row = r;
-    }
+    //int next_pivot_row = -1;
+    //for (int r = 1; r < tab.num_rows(); r++) {
+      //next_pivot_row = r;
+    //}
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
+    cout << "pivot val = " << pivot_val << endl;
+
+    assert(pivot_val != 0);
+
     tab.maximum = tab.maximum - ((tab.objective_coeff(next_pivot_col)) * ((tab.const_coeff(next_pivot_row)) / pivot_val));
     cout << "Pivot val = " << pivot_val << endl;
     cout << "New max   = " << (tab.maximum) << endl;
@@ -548,6 +561,7 @@ void no_solution_test() {
   lc.set_const(value(-6));
 
   lp_result result = maximize(sum, {lc, cc});
+  cout << "result max = " << result.val << endl;
 
   cout << "No solution test" << endl;
 }
