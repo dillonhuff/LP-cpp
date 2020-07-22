@@ -309,11 +309,16 @@ struct tableau {
   }
 
   void print(std::ostream& out) {
+    out << "Basic Variables: ";
+    for (auto b : basic_variables) {
+      out << b << " ";
+    }
+    out << endl;
     for (int r = 0; r < num_rows(); r++) {
       for (int c = 0; c < num_cols(); c++) {
-        cout << get_entry(r, c) << " ";
+        out << get_entry(r, c) << " ";
       }
-      cout << endl;
+      out << endl;
     }
   }
 
@@ -401,7 +406,8 @@ bool can_improve(tableau& tab) {
 
 enum lp_result_type {
   LP_RESULT_TYPE_OPTIMAL,
-  LP_RESULT_TYPE_UNBOUNDED
+  LP_RESULT_TYPE_UNBOUNDED,
+  LP_RESULT_TYPE_INFEASIBLE
 };
 
 struct lp_result {
@@ -465,10 +471,6 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
 
     int next_pivot_row = pivot_row;
     cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
-    //int next_pivot_row = -1;
-    //for (int r = 1; r < tab.num_rows(); r++) {
-      //next_pivot_row = r;
-    //}
 
     auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
     cout << "pivot val = " << pivot_val << endl;
@@ -490,11 +492,13 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
       }
     }
 
+    //tab.exchange(next_pivot_col, next_pivot_row);
     tab.print(cout);
   }
 
   cout << "Final tableau" << endl;
   tab.print(cout);
+
   return {tab.maximum, LP_RESULT_TYPE_OPTIMAL};
 }
 
@@ -562,8 +566,9 @@ void no_solution_test() {
 
   lp_result result = maximize(sum, {lc, cc});
   cout << "result max = " << result.val << endl;
+  assert(result.tp == LP_RESULT_TYPE_INFEASIBLE);
 
-  cout << "No solution test" << endl;
+  cout << "No solution test passed" << endl;
 }
 
 int main() {
