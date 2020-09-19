@@ -163,6 +163,17 @@ struct linear_expr {
   }
 };
 
+enum linear_constraint_type {
+  LINEAR_CONSTRAINT_TYPE_LEQ,
+  LINEAR_CONSTRAINT_TYPE_GEQ,
+  LINEAR_CONSTRAINT_TYPE_EQ
+};
+
+struct linear_constraint {
+  linear_constraint_type tp;
+  linear_expr expr;
+};
+
 std::ostream& operator<<(std::ostream& out, const value& e) {
   out << e.v.get_str();
   return out;
@@ -177,6 +188,19 @@ std::ostream& operator<<(std::ostream& out, const linear_expr& e) {
   }
 
   out << " + " << (e.constant);
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const linear_constraint& lc) {
+  out << lc.expr;
+  if (lc.tp == LINEAR_CONSTRAINT_TYPE_EQ) {
+    out << " = ";
+  } else if (lc.tp == LINEAR_CONSTRAINT_TYPE_LEQ) {
+    out << " <= ";
+  } else if (lc.tp == LINEAR_CONSTRAINT_TYPE_GEQ) {
+    cout << " >= ";
+  }
+  out << "0";
   return out;
 }
 
@@ -213,39 +237,39 @@ void sanity_check(standard_form& sf) {
   }
 }
 
-standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>& constraints) {
+standard_form to_standard_form(const linear_expr& obj, const vector<linear_constraint>& constraints) {
   standard_form form;
 
-  form.num_slack_vars = constraints.size();
-  form.num_base_vars = 2*obj.dimension();
-  int standard_dim = form.num_slack_vars + form.num_base_vars;
+  //form.num_slack_vars = constraints.size();
+  //form.num_base_vars = 2*obj.dimension();
+  //int standard_dim = form.num_slack_vars + form.num_base_vars;
 
-  form.objective = linear_expr(standard_dim);
-  for (int d = 0; d < obj.dimension(); d++) {
-    form.objective.set_coeff(2*d, obj.get_coeff(d));
-    form.objective.set_coeff(2*d + 1, neg(obj.get_coeff(d)));
-  }
+  //form.objective = linear_expr(standard_dim);
+  //for (int d = 0; d < obj.dimension(); d++) {
+    //form.objective.set_coeff(2*d, obj.get_coeff(d));
+    //form.objective.set_coeff(2*d + 1, neg(obj.get_coeff(d)));
+  //}
 
-  int slack_offset = form.num_base_vars;
-  for (auto c : constraints) {
-    auto cs = linear_expr(standard_dim);
-    for (int d = 0; d < c.dimension(); d++) {
-      cs.set_coeff(2*d, c.get_coeff(d));
-      cs.set_coeff(2*d + 1, neg(c.get_coeff(d)));
-    }
+  //int slack_offset = form.num_base_vars;
+  //for (auto c : constraints) {
+    //auto cs = linear_expr(standard_dim);
+    //for (int d = 0; d < c.dimension(); d++) {
+      //cs.set_coeff(2*d, c.get_coeff(d));
+      //cs.set_coeff(2*d + 1, neg(c.get_coeff(d)));
+    //}
 
-    cs.set_coeff(slack_offset, value(1));
+    //cs.set_coeff(slack_offset, value(1));
 
-    cs.set_const(c.get_const());
-    if (cs.get_const() >= 0) {
-      //cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
-      //assert(false);
-      cs = cs.scale(-1);
-    }
+    //cs.set_const(c.get_const());
+    //if (cs.get_const() >= 0) {
+      ////cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
+      ////assert(false);
+      //cs = cs.scale(-1);
+    //}
 
-    form.equalities.push_back(cs);
-    slack_offset++;
-  }
+    //form.equalities.push_back(cs);
+    //slack_offset++;
+  //}
 
   return form;
 }
@@ -451,12 +475,12 @@ struct lp_result {
   lp_result_type tp;
 };
 
-lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
+lp_result maximize(linear_expr sum, const vector<linear_constraint>& constraints) {
 
   cout << "Maximizing : " << sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
-    cout << "  " << c << " >= 0" << endl;
+    cout << "  " << c << endl;
   }
 
   standard_form sf = to_standard_form(sum, constraints);
@@ -467,79 +491,80 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
     cout << "  " << c << " = 0" << endl;
   }
   sanity_check(sf);
+  assert(false);
 
-  tableau tab = build_initial_tableau(sf);
+  //tableau tab = build_initial_tableau(sf);
 
-  cout << "Tableau" << endl;
-  cout << "  # basic vars: " << tab.basic_variables.size() << endl;
-  for (auto b : tab.basic_variables) {
-    cout << "    " << b << endl;
-  }
+  //cout << "Tableau" << endl;
+  //cout << "  # basic vars: " << tab.basic_variables.size() << endl;
+  //for (auto b : tab.basic_variables) {
+    //cout << "    " << b << endl;
+  //}
 
-  cout << "  # non basic vars: " << tab.non_basic_variables().size() << endl;
-  for (auto b : tab.non_basic_variables()) {
-    cout << "    " << b << endl;
-    assert(!elem(b, tab.basic_variables));
-  }
+  //cout << "  # non basic vars: " << tab.non_basic_variables().size() << endl;
+  //for (auto b : tab.non_basic_variables()) {
+    //cout << "    " << b << endl;
+    //assert(!elem(b, tab.basic_variables));
+  //}
 
-  sanity_check(tab);
+  //sanity_check(tab);
 
-  for (int r = 0; r < tab.num_rows(); r++) {
-    for (int c = 0; c < tab.num_cols(); c++) {
-      cout << (tab.get_entry(r, c)) << " ";
-    }
-    cout << endl;
-  }
+  //for (int r = 0; r < tab.num_rows(); r++) {
+    //for (int c = 0; c < tab.num_cols(); c++) {
+      //cout << (tab.get_entry(r, c)) << " ";
+    //}
+    //cout << endl;
+  //}
 
-  while (can_improve(tab)) {
-    int next_pivot_col = pick_pivot_col(tab);
-    cout << "next pivot col = " << next_pivot_col << endl;
-    bool unbounded = true;
-    for (int r = 0; r < tab.num_rows(); r++) {
-      if (tab.get_entry(r, next_pivot_col) > 0) {
-        unbounded = false;
-        break;
-      }
-    }
+  //while (can_improve(tab)) {
+    //int next_pivot_col = pick_pivot_col(tab);
+    //cout << "next pivot col = " << next_pivot_col << endl;
+    //bool unbounded = true;
+    //for (int r = 0; r < tab.num_rows(); r++) {
+      //if (tab.get_entry(r, next_pivot_col) > 0) {
+        //unbounded = false;
+        //break;
+      //}
+    //}
 
-    if (unbounded) {
-      return {0, LP_RESULT_TYPE_UNBOUNDED};
-    }
+    //if (unbounded) {
+      //return {0, LP_RESULT_TYPE_UNBOUNDED};
+    //}
 
-    int pivot_row = pick_pivot_row(next_pivot_col, tab);
-    cout << "Pivot row = " << pivot_row << endl;
+    //int pivot_row = pick_pivot_row(next_pivot_col, tab);
+    //cout << "Pivot row = " << pivot_row << endl;
 
-    assert(pivot_row >= 0);
+    //assert(pivot_row >= 0);
 
-    int next_pivot_row = pivot_row;
-    cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
+    //int next_pivot_row = pivot_row;
+    //cout << "--- Next non basic variable to convert: " << next_pivot_col << endl;
 
-    auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
-    cout << "pivot val = " << pivot_val << endl;
+    //auto pivot_val = tab.get_entry(next_pivot_row, next_pivot_col);
+    //cout << "pivot val = " << pivot_val << endl;
 
-    assert(pivot_val != 0);
+    //assert(pivot_val != 0);
 
-    tab.maximum = tab.maximum - ((tab.objective_coeff(next_pivot_col)) * ((tab.const_coeff(next_pivot_row)) / pivot_val));
-    cout << "Pivot val = " << pivot_val << endl;
-    cout << "New max   = " << (tab.maximum) << endl;
-    tab.scale_row((value(1) / pivot_val), pivot_row);
+    //tab.maximum = tab.maximum - ((tab.objective_coeff(next_pivot_col)) * ((tab.const_coeff(next_pivot_row)) / pivot_val));
+    //cout << "Pivot val = " << pivot_val << endl;
+    //cout << "New max   = " << (tab.maximum) << endl;
+    //tab.scale_row((value(1) / pivot_val), pivot_row);
 
-    for (int r = 0; r < tab.num_rows(); r++) {
-      if (r != next_pivot_row) {
-        vector<value> muls;
-        for (int c = 0; c < tab.num_cols(); c++) {
-          muls.push_back(tab.get_entry(r, c) * tab.get_entry(pivot_row, c));
-        }
-        tab.subtract_row(muls, r);
-      }
-    }
+    //for (int r = 0; r < tab.num_rows(); r++) {
+      //if (r != next_pivot_row) {
+        //vector<value> muls;
+        //for (int c = 0; c < tab.num_cols(); c++) {
+          //muls.push_back(tab.get_entry(r, c) * tab.get_entry(pivot_row, c));
+        //}
+        //tab.subtract_row(muls, r);
+      //}
+    //}
 
-    tab.exchange(next_pivot_col, next_pivot_row);
-    tab.print(cout);
-  }
+    //tab.exchange(next_pivot_col, next_pivot_row);
+    //tab.print(cout);
+  //}
 
-  cout << "#### Final tableau" << endl;
-  tab.print(cout);
+  //cout << "#### Final tableau" << endl;
+  //tab.print(cout);
   //for (int r = 1; r < tab.num_rows(); r++) {
     //bool contains_one = false;
     //for (int c = 0; c < tab.num_cols(); c++) {
@@ -554,7 +579,19 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   //}
 
 
-  return {tab.maximum, LP_RESULT_TYPE_OPTIMAL};
+  //return {tab.maximum, LP_RESULT_TYPE_OPTIMAL};
+}
+
+linear_constraint eq(const linear_expr& e) {
+  return {LINEAR_CONSTRAINT_TYPE_EQ, e};
+}
+
+linear_constraint geq(const linear_expr& e) {
+  return {LINEAR_CONSTRAINT_TYPE_GEQ, e};
+}
+
+linear_constraint leq(const linear_expr& e) {
+  return {LINEAR_CONSTRAINT_TYPE_LEQ, e};
 }
 
 void basic_test() {
@@ -565,7 +602,7 @@ void basic_test() {
   lc.set_coeff(0, value(-1));
   lc.set_const(value(5));
 
-  vector<linear_expr> constraints{lc};
+  vector<linear_constraint> constraints{geq(lc)};
   lp_result result = maximize(sum, constraints);
 
   assert(result.val == 5);
@@ -575,66 +612,66 @@ void basic_test() {
   assert(false);
 }
 
-void ft_test() {
-  linear_expr sum(1);
-  sum.set_coeff(0, value(1));
+//void ft_test() {
+  //linear_expr sum(1);
+  //sum.set_coeff(0, value(1));
 
-  linear_expr lc(1);
-  lc.set_coeff(0, value(-2));
-  lc.set_const(value(60));
+  //linear_expr lc(1);
+  //lc.set_coeff(0, value(-2));
+  //lc.set_const(value(60));
 
-  vector<linear_expr> constraints{lc};
-  lp_result result = maximize(sum, constraints);
+  //vector<linear_expr> constraints{lc};
+  //lp_result result = maximize(sum, constraints);
 
-  assert(result.val == 30);
-  assert(result.tp == LP_RESULT_TYPE_OPTIMAL);
+  //assert(result.val == 30);
+  //assert(result.tp == LP_RESULT_TYPE_OPTIMAL);
 
-  cout << "Non-unity coefficient test passed" << endl;
-}
+  //cout << "Non-unity coefficient test passed" << endl;
+//}
 
-void unbounded_test() {
-  linear_expr sum(1);
-  sum.set_coeff(0, value(1));
+//void unbounded_test() {
+  //linear_expr sum(1);
+  //sum.set_coeff(0, value(1));
 
-  linear_expr lc(1);
-  lc.set_coeff(0, value(1));
-  lc.set_const(value(5));
+  //linear_expr lc(1);
+  //lc.set_coeff(0, value(1));
+  //lc.set_const(value(5));
 
-  vector<linear_expr> constraints{lc};
-  lp_result result = maximize(sum, constraints);
+  //vector<linear_expr> constraints{lc};
+  //lp_result result = maximize(sum, constraints);
 
-  assert(result.tp == LP_RESULT_TYPE_UNBOUNDED);
+  //assert(result.tp == LP_RESULT_TYPE_UNBOUNDED);
 
-  cout << "Unbounded test passed" << endl;
-}
+  //cout << "Unbounded test passed" << endl;
+//}
 
-void no_solution_test() {
-  cout << "------ Starting no_solution_test" << endl;
-  linear_expr sum(1);
-  sum.set_coeff(0, value(1));
+//void no_solution_test() {
+  //cout << "------ Starting no_solution_test" << endl;
+  //linear_expr sum(1);
+  //sum.set_coeff(0, value(1));
 
-  linear_expr lc(1);
-  lc.set_coeff(0, value(1));
-  lc.set_const(value(5));
+  //linear_expr lc(1);
+  //lc.set_coeff(0, value(1));
+  //lc.set_const(value(5));
 
-  linear_expr cc(1);
-  cc.set_coeff(0, value(-1));
-  cc.set_const(value(-6));
+  //linear_expr cc(1);
+  //cc.set_coeff(0, value(-1));
+  //cc.set_const(value(-6));
 
-  cout << "cc=  " << cc << endl;
-  cout << "lc=  " << lc << endl;
+  //cout << "cc=  " << cc << endl;
+  //cout << "lc=  " << lc << endl;
 
-  lp_result result = maximize(sum, {lc, cc});
-  cout << "result max = " << result.val << endl;
-  assert(result.tp == LP_RESULT_TYPE_INFEASIBLE);
+  //lp_result result = maximize(sum, {lc, cc});
+  //cout << "result max = " << result.val << endl;
+  //assert(result.tp == LP_RESULT_TYPE_INFEASIBLE);
 
-  cout << "No solution test passed" << endl;
-}
+  //cout << "No solution test passed" << endl;
+//}
 
 int main() {
   basic_test();
-  ft_test();
-  unbounded_test();
-  no_solution_test();
+  //ft_test();
+  //unbounded_test();
+  //no_solution_test();
 }
 
