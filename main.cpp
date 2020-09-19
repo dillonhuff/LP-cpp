@@ -240,36 +240,37 @@ void sanity_check(standard_form& sf) {
 standard_form to_standard_form(const linear_expr& obj, const vector<linear_constraint>& constraints) {
   standard_form form;
 
-  //form.num_slack_vars = constraints.size();
-  //form.num_base_vars = 2*obj.dimension();
-  //int standard_dim = form.num_slack_vars + form.num_base_vars;
+  form.num_slack_vars = constraints.size();
+  form.num_base_vars = 2*obj.dimension();
+  int standard_dim = form.num_slack_vars + form.num_base_vars;
 
-  //form.objective = linear_expr(standard_dim);
-  //for (int d = 0; d < obj.dimension(); d++) {
-    //form.objective.set_coeff(2*d, obj.get_coeff(d));
-    //form.objective.set_coeff(2*d + 1, neg(obj.get_coeff(d)));
-  //}
+  form.objective = linear_expr(standard_dim);
+  for (int d = 0; d < obj.dimension(); d++) {
+    form.objective.set_coeff(2*d, obj.get_coeff(d));
+    form.objective.set_coeff(2*d + 1, neg(obj.get_coeff(d)));
+  }
 
-  //int slack_offset = form.num_base_vars;
-  //for (auto c : constraints) {
-    //auto cs = linear_expr(standard_dim);
-    //for (int d = 0; d < c.dimension(); d++) {
-      //cs.set_coeff(2*d, c.get_coeff(d));
-      //cs.set_coeff(2*d + 1, neg(c.get_coeff(d)));
-    //}
+  int slack_offset = form.num_base_vars;
+  for (auto c : constraints) {
+    auto cs = linear_expr(standard_dim);
+    for (int d = 0; d < c.expr.dimension(); d++) {
+      cs.set_coeff(2*d, c.expr.get_coeff(d));
+      cs.set_coeff(2*d + 1, neg(c.expr.get_coeff(d)));
+    }
 
-    //cs.set_coeff(slack_offset, value(1));
+    cs.set_coeff(slack_offset, value(1));
 
-    //cs.set_const(c.get_const());
-    //if (cs.get_const() >= 0) {
+    cs.set_const(c.expr.get_const());
+    //linear_constraint_type tp = c.tp;
+    if (cs.get_const() >= 0) {
       ////cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
       ////assert(false);
-      //cs = cs.scale(-1);
-    //}
+      cs = cs.scale(-1);
+    }
 
-    //form.equalities.push_back(cs);
-    //slack_offset++;
-  //}
+    form.equalities.push_back(cs);
+    slack_offset++;
+  }
 
   return form;
 }
