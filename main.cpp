@@ -199,6 +199,12 @@ struct standard_form {
   int num_slack_vars;
 };
 
+void sanity_check(standard_form& sf) {
+  for (auto& e : sf.equalities) {
+    assert(e.get_const() < 0);
+  }
+}
+
 standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>& constraints) {
   standard_form form;
 
@@ -223,6 +229,10 @@ standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>
     cs.set_coeff(slack_offset, value(1));
 
     cs.set_const(c.get_const());
+    if (cs.get_const() >= 0) {
+      cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
+      assert(false);
+    }
 
     form.equalities.push_back(cs);
     slack_offset++;
@@ -447,6 +457,7 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   for (auto c : sf.equalities) {
     cout << "  " << c << " = 0" << endl;
   }
+  sanity_check(sf);
 
   tableau tab = build_initial_tableau(sf);
 
@@ -552,6 +563,7 @@ void basic_test() {
   assert(result.tp == LP_RESULT_TYPE_OPTIMAL);
 
   cout << "BASIC TEST Passed" << endl;
+  assert(false);
 }
 
 void ft_test() {
