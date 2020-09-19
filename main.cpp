@@ -86,6 +86,10 @@ bool operator>(const value& v, const int t) {
   return cmp(v.v, t) > 0;
 }
 
+bool operator>=(const value& v, const int t) {
+  return cmp(v.v, t) >= 0;
+}
+
 value operator-(const value& v, const value& t) {
   return value(v.v - t.v);
 }
@@ -247,9 +251,10 @@ struct tableau {
   }
 
   void exchange(const int new_basic, const int old_basic) {
-    assert(elem(old_basic, basic_variables));
-    basic_variables.insert(new_basic);
-    basic_variables.erase(old_basic);
+    //cout << "adding " << new_basic << " to basis, and removing: " << old_basic << endl;
+    //assert(elem(old_basic, basic_variables));
+    //basic_variables.insert(new_basic);
+    //basic_variables.erase(old_basic);
   }
 
   value const_coeff(const int row) const {
@@ -315,14 +320,26 @@ struct tableau {
     }
     out << endl;
     for (int r = 0; r < num_rows(); r++) {
+      if (r == 0) {
+        out << "--- Obj" << endl;
+      }
       for (int c = 0; c < num_cols(); c++) {
         out << get_entry(r, c) << " ";
       }
       out << endl;
+      if (r == 0) {
+        out << "--- Constraints" << endl;
+      }
     }
   }
 
 };
+
+void sanity_check(tableau& tab) {
+  for (int r = 0; r < tab.num_rows(); r++) {
+    assert(tab.const_coeff(r) >= 0);
+  }
+}
 
 tableau build_initial_tableau(standard_form& form) {
   int ncols = form.num_slack_vars + form.num_base_vars + 1;
@@ -416,6 +433,7 @@ struct lp_result {
 };
 
 lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
+
   cout << "Maximizing : " << sum << endl;
   cout << "Subject to: " << endl;
   for (auto c : constraints) {
@@ -431,6 +449,7 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
   }
 
   tableau tab = build_initial_tableau(sf);
+
   cout << "Tableau" << endl;
   cout << "  # basic vars: " << tab.basic_variables.size() << endl;
   for (auto b : tab.basic_variables) {
@@ -442,6 +461,9 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
     cout << "    " << b << endl;
     assert(!elem(b, tab.basic_variables));
   }
+
+  sanity_check(tab);
+
   for (int r = 0; r < tab.num_rows(); r++) {
     for (int c = 0; c < tab.num_cols(); c++) {
       cout << (tab.get_entry(r, c)) << " ";
@@ -492,12 +514,25 @@ lp_result maximize(linear_expr sum, const vector<linear_expr>& constraints) {
       }
     }
 
-    //tab.exchange(next_pivot_col, next_pivot_row);
+    tab.exchange(next_pivot_col, next_pivot_row);
     tab.print(cout);
   }
 
-  cout << "Final tableau" << endl;
+  cout << "#### Final tableau" << endl;
   tab.print(cout);
+  //for (int r = 1; r < tab.num_rows(); r++) {
+    //bool contains_one = false;
+    //for (int c = 0; c < tab.num_cols(); c++) {
+      //if (tab.get_entry(r, c) == 0) {
+        //contains_one = true;
+        //break;
+      //}
+    //}
+    //if (contains_one) {
+      //basis.insert(r);
+    //}
+  //}
+
 
   return {tab.maximum, LP_RESULT_TYPE_OPTIMAL};
 }
@@ -553,6 +588,7 @@ void unbounded_test() {
 }
 
 void no_solution_test() {
+  cout << "------ Starting no_solution_test" << endl;
   linear_expr sum(1);
   sum.set_coeff(0, value(1));
 
@@ -561,8 +597,11 @@ void no_solution_test() {
   lc.set_const(value(5));
 
   linear_expr cc(1);
-  lc.set_coeff(0, value(-1));
-  lc.set_const(value(-6));
+  cc.set_coeff(0, value(-1));
+  cc.set_const(value(-6));
+
+  cout << "cc=  " << cc << endl;
+  cout << "lc=  " << lc << endl;
 
   lp_result result = maximize(sum, {lc, cc});
   cout << "result max = " << result.val << endl;
