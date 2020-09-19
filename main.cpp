@@ -136,6 +136,14 @@ struct linear_expr {
     return coeffs.size();
   }
 
+  linear_expr scale(const int v) {
+    linear_expr scaled = *this;
+    for (int d = 0; d < dimension(); d++) {
+      scaled.set_coeff(d, scaled.get_coeff(d)*v);
+    }
+    scaled.set_const(scaled.get_const()*v);
+    return scaled;
+  }
 
   void set_const(const value& v) {
     constant = v;
@@ -230,8 +238,9 @@ standard_form to_standard_form(const linear_expr& obj, const vector<linear_expr>
 
     cs.set_const(c.get_const());
     if (cs.get_const() >= 0) {
-      cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
-      assert(false);
+      //cout << "Error: Standard form requires the constant to be negative when on LHS of the equality, but we have: " << cs << endl;
+      //assert(false);
+      cs = cs.scale(-1);
     }
 
     form.equalities.push_back(cs);
