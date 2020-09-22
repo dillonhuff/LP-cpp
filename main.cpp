@@ -132,11 +132,11 @@ struct point {
 
 struct linear_expr {
   std::vector<value> coeffs;
-  value constant;
+  value constant_val;
 
   linear_expr() {
     coeffs.resize(0);
-    constant = value(0);
+    constant_val = value(0);
   }
 
   linear_expr(const int dimension) {
@@ -144,7 +144,7 @@ struct linear_expr {
     for (int i = 0; i < dimension; i++) {
       coeffs[i] = value(0);
     }
-    constant = value(0);
+    constant_val = value(0);
   }
 
   int dimension() const {
@@ -166,11 +166,15 @@ struct linear_expr {
   }
 
   void set_const(const value& v) {
-    constant = v;
+    constant_val = v;
+  }
+
+  value constant() const {
+    return constant_val;
   }
 
   value get_const() const {
-    return constant;
+    return constant();
   }
 
   value get_coeff(const int dim) const {
@@ -216,7 +220,7 @@ std::ostream& operator<<(std::ostream& out, const linear_expr& e) {
     out << (e.coeffs.at(i)) << " x_" << i;
   }
 
-  out << " + " << (e.constant);
+  out << " + " << (e.constant());
   return out;
 }
 
@@ -624,7 +628,7 @@ linear_constraint leq(const linear_expr& e) {
   return {LINEAR_CONSTRAINT_TYPE_LEQ, e};
 }
 
-bool sat(const point& p, const linear_constraint& lc) {
+value evaluate(const point& p, const linear_expr& lc) {
   assert(p.dimension() == lc.dimension());
   value v = 0;
   for (int i = 0; i < p.dimension(); i++) {
@@ -632,6 +636,16 @@ bool sat(const point& p, const linear_constraint& lc) {
   }
   v += lc.constant();
   return v >= 0;
+}
+
+bool sat(const point& p, const linear_constraint& lc) {
+  //assert(p.dimension() == lc.dimension());
+  //value v = 0;
+  //for (int i = 0; i < p.dimension(); i++) {
+    //v += p[i] + lc[i];
+  //}
+  //v += lc.constant();
+  return evaluate(p, lc.expr) >= 0;
 }
 
 bool tight(const point& p, const linear_constraint& lc) {
