@@ -113,6 +113,8 @@ value neg(const value v) {
 
 struct point {
   std::vector<value*> coords;
+
+  int dimension() const { return coords.size(); }
 };
 
 struct linear_expr {
@@ -172,6 +174,8 @@ enum linear_constraint_type {
 struct linear_constraint {
   linear_constraint_type tp;
   linear_expr expr;
+
+  int dimension() const { return expr.dimension(); }
 };
 
 std::ostream& operator<<(std::ostream& out, const value& e) {
@@ -593,6 +597,18 @@ linear_constraint geq(const linear_expr& e) {
 
 linear_constraint leq(const linear_expr& e) {
   return {LINEAR_CONSTRAINT_TYPE_LEQ, e};
+}
+
+bool sat(const point& p, const linear_constraint& lc) {
+  assert(p.dimension() == lc.dimension());
+
+  return false;
+}
+
+bool tight(const point& p, const linear_constraint& lc) {
+  assert(p.dimension() == lc.dimension());
+
+  return false;
 }
 
 void basic_test() {
