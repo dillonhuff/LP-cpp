@@ -611,6 +611,10 @@ bool tight(const point& p, const linear_constraint& lc) {
   return false;
 }
 
+void constraint_set_test() {
+//constraints{geq(lc)};
+}
+
 void basic_test() {
   linear_expr sum(1);
   sum.set_coeff(0, value(1));
