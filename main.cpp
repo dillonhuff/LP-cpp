@@ -98,6 +98,10 @@ value operator+(const value& v, const value& t) {
   return value(v.v + t.v);
 }
 
+value operator+=(const value& v, const value& t) {
+  return v + t;
+}
+
 value operator*(const value& v, const value& t) {
   return value(v.v * t.v);
 }
@@ -112,7 +116,16 @@ value neg(const value v) {
 }
 
 struct point {
-  std::vector<value*> coords;
+  std::vector<value> coords;
+
+  point(const std::vector<value>& coords_) : coords(coords_) {}
+  point(const value& a, const value& b) : coords({a, b}) {}
+  point(const value& a) : coords({a}) {}
+
+  const value& operator[](const int i) const {
+    assert(i < dimension());
+    return coords[i];
+  }
 
   int dimension() const { return coords.size(); }
 };
@@ -138,6 +151,11 @@ struct linear_expr {
     return coeffs.size();
   }
 
+  const value& operator[](const int i) const {
+    assert(i < dimension());
+    return coeffs[i];
+  }
+
   linear_expr scale(const int v) {
     linear_expr scaled = *this;
     for (int d = 0; d < dimension(); d++) {
@@ -151,7 +169,7 @@ struct linear_expr {
     constant = v;
   }
 
-  value get_const() {
+  value get_const() const {
     return constant;
   }
 
@@ -175,7 +193,14 @@ struct linear_constraint {
   linear_constraint_type tp;
   linear_expr expr;
 
+  value constant() const { return expr.get_const(); }
+
   int dimension() const { return expr.dimension(); }
+
+  const value& operator[](const int i) const {
+    assert(i < dimension());
+    return expr[i];
+  }
 };
 
 std::ostream& operator<<(std::ostream& out, const value& e) {
@@ -601,8 +626,12 @@ linear_constraint leq(const linear_expr& e) {
 
 bool sat(const point& p, const linear_constraint& lc) {
   assert(p.dimension() == lc.dimension());
-
-  return false;
+  value v = 0;
+  for (int i = 0; i < p.dimension(); i++) {
+    v += p[i] + lc[i];
+  }
+  v += lc.constant();
+  return v >= 0;
 }
 
 bool tight(const point& p, const linear_constraint& lc) {
@@ -612,7 +641,18 @@ bool tight(const point& p, const linear_constraint& lc) {
 }
 
 void constraint_set_test() {
-//constraints{geq(lc)};
+  linear_expr sum(1);
+  sum.set_coeff(0, value(1));
+
+  linear_expr lc(1);
+  lc.set_coeff(0, value(-1));
+  lc.set_const(value(5));
+
+  linear_constraint constraint = geq(lc);
+
+  cout << "C = " << constraint << endl;
+
+  assert(sat({0}, constraint));
 }
 
 void basic_test() {
@@ -690,6 +730,7 @@ void basic_test() {
 //}
 
 int main() {
+  constraint_set_test();
   basic_test();
   //ft_test();
   //unbounded_test();
