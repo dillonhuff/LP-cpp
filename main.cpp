@@ -98,9 +98,9 @@ value operator+(const value& v, const value& t) {
   return value(v.v + t.v);
 }
 
-value operator+=(const value& v, const value& t) {
-  return v + t;
-}
+//value operator+=(const value& v, const value& t) {
+  //return v + t;
+//}
 
 value operator*(const value& v, const value& t) {
   return value(v.v * t.v);
@@ -632,10 +632,10 @@ value evaluate(const point& p, const linear_expr& lc) {
   assert(p.dimension() == lc.dimension());
   value v = 0;
   for (int i = 0; i < p.dimension(); i++) {
-    v += p[i] + lc[i];
+    v = v + p[i] * lc[i];
   }
-  v += lc.constant();
-  return v >= 0;
+  v = v + lc.constant();
+  return v;
 }
 
 bool sat(const point& p, const linear_constraint& lc) {
@@ -650,8 +650,9 @@ bool sat(const point& p, const linear_constraint& lc) {
 
 bool tight(const point& p, const linear_constraint& lc) {
   assert(p.dimension() == lc.dimension());
-
-  return false;
+  auto r = evaluate(p, lc.expr);
+  cout << "r = " << r << endl;
+  return r == 0;
 }
 
 void constraint_set_test() {
@@ -667,6 +668,8 @@ void constraint_set_test() {
   cout << "C = " << constraint << endl;
 
   assert(sat({0}, constraint));
+  assert(tight({5}, constraint));
+  assert(!tight({3}, constraint));
 }
 
 void basic_test() {
