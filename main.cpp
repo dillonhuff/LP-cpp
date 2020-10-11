@@ -91,6 +91,10 @@ bool operator>=(const value& v, const int t) {
   return cmp(v.v, t) >= 0;
 }
 
+value operator-(const value& v) {
+  return value(-v.v);
+}
+
 value operator-(const value& v, const value& t) {
   return value(v.v - t.v);
 }
@@ -309,6 +313,9 @@ standard_form to_standard_form(const linear_expr& obj, const vector<linear_const
   return form;
 }
 
+struct tableau;
+std::ostream& operator<<(std::ostream& out, const tableau& tab);
+
 struct tableau {
   value maximum;
   std::set<int> basic_variables;
@@ -316,6 +323,32 @@ struct tableau {
 
   value& operator()(const int r, const int c) {
     return rows[r][c];
+  }
+
+  void pivot(const int next_pivot_row, const int next_pivot_col) {
+    int pivot_row = next_pivot_row;
+
+    auto pivot_val = get_entry(next_pivot_row, next_pivot_col);
+
+    assert(pivot_val != 0);
+
+    maximum = maximum - ((objective_coeff(next_pivot_col)) * ((const_coeff(next_pivot_row)) / pivot_val));
+    cout << "Pivot r   = " << next_pivot_row << endl;
+    cout << "Pivot c   = " << next_pivot_col << endl;
+    cout << "Pivot val = " << pivot_val << endl;
+    cout << "New max   = " << (maximum) << endl;
+
+    for (int r = 0; r < num_rows(); r++) {
+      auto rc = get_entry(r, next_pivot_col);
+      if (r != next_pivot_row) {
+        subtract_scaled_row(r, rc / pivot_val, pivot_row);
+        cout << "r = " << r << endl;
+        cout << *this << endl;
+        assert(get_entry(r, next_pivot_col) == 0);
+      }
+    }
+
+    scale_row((value(1) / pivot_val), pivot_row);
   }
 
   void subtract_scaled_row(const int dst_row, const value& k, const int src_row) {
@@ -818,6 +851,11 @@ void phase_1_test() {
   tab.subtract_scaled_row(0, 1, 5);
   cout << "After subtract" << endl;
   cout << tab << endl;
+
+  tab.pivot(3, 9);
+  cout << "After initial pivot" << endl;
+  cout << tab << endl;
+
   assert(false);
 }
 
