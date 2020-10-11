@@ -120,6 +120,22 @@ value neg(const value v) {
   return value(-(v.v));
 }
 
+struct tableau;
+bool can_improve(tableau& tab);
+int pick_pivot_col(tableau& tab);
+int pick_pivot_row(const int col, tableau& tab);
+
+enum lp_result_type {
+  LP_RESULT_TYPE_OPTIMAL,
+  LP_RESULT_TYPE_UNBOUNDED,
+  LP_RESULT_TYPE_INFEASIBLE
+};
+
+struct lp_result {
+  value val;
+  lp_result_type tp;
+};
+
 struct point {
   std::vector<value> coords;
 
@@ -321,8 +337,41 @@ struct tableau {
   std::set<int> basic_variables;
   vector<vector<value> > rows;
 
+  tableau(const int nrows, const int ncols) {
+    maximum = value(0);
+    rows.resize(nrows);
+    for (auto& r : rows) {
+      r.resize(ncols);
+    }
+  }
+
   value& operator()(const int r, const int c) {
     return rows[r][c];
+  }
+
+  lp_result maximize() {
+    while (can_improve(*this)) {
+      int next_pivot_col = pick_pivot_col(*this);
+      //cout << "next pivot col = " << next_pivot_col << endl;
+      bool unbounded = true;
+      for (int r = 0; r < num_rows(); r++) {
+        if (get_entry(r, next_pivot_col) > 0) {
+          unbounded = false;
+          break;
+        }
+      }
+
+      if (unbounded) {
+        return {0, LP_RESULT_TYPE_UNBOUNDED};
+      }
+
+      int pivot_row = pick_pivot_row(next_pivot_col, *this);
+      pivot(pivot_row, next_pivot_col);
+      cout << "After pivot" << endl;
+      cout << *this << endl;
+    }
+
+    return {maximum, LP_RESULT_TYPE_OPTIMAL};
   }
 
   void pivot(const int next_pivot_row, const int next_pivot_col) {
@@ -342,8 +391,6 @@ struct tableau {
       auto rc = get_entry(r, next_pivot_col);
       if (r != next_pivot_row) {
         subtract_scaled_row(r, rc / pivot_val, pivot_row);
-        cout << "r = " << r << endl;
-        cout << *this << endl;
         assert(get_entry(r, next_pivot_col) == 0);
       }
     }
@@ -406,14 +453,6 @@ struct tableau {
     }
 
     return non_basic;
-  }
-
-  tableau(const int nrows, const int ncols) {
-    maximum = value(0);
-    rows.resize(nrows);
-    for (auto& r : rows) {
-      r.resize(ncols);
-    }
   }
 
   int num_rows() const {
@@ -517,7 +556,6 @@ tableau build_initial_tableau(standard_form& form) {
 }
 
 int pick_pivot_row(const int next_pivot_col, tableau& tab) {
-  cout << "picking pivot row for " << next_pivot_col << endl;
   value max(0);
   int pivot_row = -1;
   for (int r = 1; r < tab.num_rows(); r++) {
@@ -532,6 +570,9 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
       }
     }
   }
+
+  assert(pivot_row >= 0);
+
   return pivot_row;
 }
 
@@ -566,17 +607,6 @@ bool can_improve(tableau& tab) {
   }
   return false;
 }
-
-enum lp_result_type {
-  LP_RESULT_TYPE_OPTIMAL,
-  LP_RESULT_TYPE_UNBOUNDED,
-  LP_RESULT_TYPE_INFEASIBLE
-};
-
-struct lp_result {
-  value val;
-  lp_result_type tp;
-};
 
 lp_result maximize(linear_expr sum, const vector<linear_constraint>& constraints) {
 
@@ -853,9 +883,15 @@ void phase_1_test() {
   cout << tab << endl;
 
   tab.pivot(3, 9);
+
   cout << "After initial pivot" << endl;
   cout << tab << endl;
 
+  auto lp = tab.maximize();
+  cout << "LP = " << lp.val << endl;
+
+  cout << "After max" << endl;
+  cout << tab << endl;
   assert(false);
 }
 
