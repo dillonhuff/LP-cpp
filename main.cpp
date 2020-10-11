@@ -781,6 +781,23 @@ void phase_1_test() {
   tab(2, 9) = -1;
   tab(2, 9) = -1;
 
+  tab(3, 2) = 1;
+  tab(3, 3) = 2;
+  tab(3, 4) = -1;
+  tab(3, 6) = 1;
+  tab(3, 9) = -1;
+  tab(3, 9) = -2;
+
+  tab(4, 2) = 2;
+  tab(4, 3) = 1;
+  tab(4, 7) = 1;
+  tab(4, 9) = 2;
+
+  tab(5, 2) = 1;
+  tab(5, 3) = 1;
+  tab(5, 8) = 1;
+  tab(5, 9) = 1;
+
   cout << tab << endl;
   assert(false);
 }
