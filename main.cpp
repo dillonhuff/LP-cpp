@@ -581,7 +581,8 @@ int pick_pivot_col(tableau& tab) {
 
   value min_obj_coeff(-1);
 
-  for (int x = 0; x < tab.num_cols() - 1; x++) {
+  //for (int x = 0; x < tab.num_cols() - 1; x++) {
+  for (int x = (int) tab.num_cols() - 2; x >= 0; x--) {
     value c = tab.objective_coeff(x);
     if (c < 0) {
       if (min_obj_coeff < 0 || c < min_obj_coeff) {
