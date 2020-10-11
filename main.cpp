@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <set>
 #include "algorithm.h"
@@ -412,6 +413,21 @@ struct tableau {
 
 };
 
+std::ostream& operator<<(std::ostream& out, const tableau& tab) {
+  int i = 0;
+  for (auto& r : tab.rows) {
+    for (auto& v : r) {
+      std::cout << std::setfill(' ') << std::setw(8) << v << " ";
+    }
+    cout << endl;
+    if (i == 0) {
+      std::cout << std::setfill('-') << std::setw(8*(r.size() + 1)) << "" << std::endl;
+    }
+    i++;
+  }
+  return out;
+}
+
 void sanity_check(tableau& tab) {
   for (int r = 0; r < tab.num_rows(); r++) {
     assert(tab.const_coeff(r) >= 0);
@@ -525,15 +541,12 @@ lp_result maximize(linear_expr sum, const vector<linear_constraint>& constraints
     cout << "  " << c << " = 0" << endl;
   }
   sanity_check(sf);
+
+  tableau tab = build_initial_tableau(sf);
+
+  cout << "Tableau" << endl;
+  cout << tab << endl;
   assert(false);
-
-  //tableau tab = build_initial_tableau(sf);
-
-  //cout << "Tableau" << endl;
-  //cout << "  # basic vars: " << tab.basic_variables.size() << endl;
-  //for (auto b : tab.basic_variables) {
-    //cout << "    " << b << endl;
-  //}
 
   //cout << "  # non basic vars: " << tab.non_basic_variables().size() << endl;
   //for (auto b : tab.non_basic_variables()) {
