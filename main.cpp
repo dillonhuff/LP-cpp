@@ -318,6 +318,15 @@ struct tableau {
     return rows[r][c];
   }
 
+  void subtract_scaled_row(const int dst_row, const value& k, const int src_row) {
+    assert(src_row < num_rows());
+    assert(dst_row < num_rows());
+
+    for (int c = 0; c < num_cols(); c++) {
+      set_entry(dst_row, c, get_entry(dst_row, c) - k*get_entry(src_row, c));
+    }
+  }
+
   void subtract_row(const std::vector<value>& diffs, const int row) {
     assert(diffs.size() == num_cols());
     for (int c = 0; c < num_cols(); c++) {
@@ -420,8 +429,15 @@ struct tableau {
 std::ostream& operator<<(std::ostream& out, const tableau& tab) {
   int i = 0;
   for (auto& r : tab.rows) {
+    int j = 0;
     for (auto& v : r) {
-      std::cout << std::setfill(' ') << std::setw(8) << v << " ";
+      std::cout << std::setfill(' ') << std::setw(6) << v;
+      if (j == (int) r.size() - 2) {
+        cout << " |";
+      } else {
+        cout << "  ";
+      }
+      j++;
     }
     cout << endl;
     if (i == 0) {
@@ -779,25 +795,28 @@ void phase_1_test() {
   tab(2, 4) = -1;
   tab(2, 5) = 1;
   tab(2, 9) = -1;
-  tab(2, 9) = -1;
+  tab(2, 10) = -1;
 
   tab(3, 2) = 1;
   tab(3, 3) = 2;
   tab(3, 4) = -1;
   tab(3, 6) = 1;
   tab(3, 9) = -1;
-  tab(3, 9) = -2;
+  tab(3, 10) = -2;
 
   tab(4, 2) = 2;
   tab(4, 3) = 1;
   tab(4, 7) = 1;
-  tab(4, 9) = 2;
+  tab(4, 10) = 2;
 
   tab(5, 2) = 1;
   tab(5, 3) = 1;
   tab(5, 8) = 1;
-  tab(5, 9) = 1;
+  tab(5, 10) = 1;
 
+  cout << tab << endl;
+  tab.subtract_scaled_row(0, 1, 5);
+  cout << "After subtract" << endl;
   cout << tab << endl;
   assert(false);
 }
