@@ -314,6 +314,10 @@ struct tableau {
   std::set<int> basic_variables;
   vector<vector<value> > rows;
 
+  value& operator()(const int r, const int c) {
+    return rows[r][c];
+  }
+
   void subtract_row(const std::vector<value>& diffs, const int row) {
     assert(diffs.size() == num_cols());
     for (int c = 0; c < num_cols(); c++) {
@@ -457,7 +461,7 @@ tableau build_initial_tableau(standard_form& form) {
     for (int d = 0; d < c.dimension(); d++) {
       tab.set_entry(r, d, c.get_coeff(d));
     }
-    tab.set_entry(r, ncols - 1, c.get_const());
+    tab.set_entry(r, ncols - 1, -1*c.get_const());
     r++;
   }
   return tab;
@@ -759,8 +763,17 @@ void basic_test() {
   //cout << "No solution test passed" << endl;
 //}
 
+void phase_1_test() {
+  tableau tab(6, 11);
+  tab(0, 0) = 1;
+
+  cout << tab << endl;
+  assert(false);
+}
+
 int main() {
   constraint_set_test();
+  phase_1_test();
   basic_test();
   //ft_test();
   //unbounded_test();
