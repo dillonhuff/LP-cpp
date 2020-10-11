@@ -766,6 +766,20 @@ void basic_test() {
 void phase_1_test() {
   tableau tab(6, 11);
   tab(0, 0) = 1;
+  tab(0, 8) = 1;
+  tab(0, 9) = 1;
+
+  tab(1, 1) = 1;
+  tab(1, 2) = -5;
+  tab(1, 3) = 1;
+  tab(1, 4) = 1;
+
+  tab(2, 2) = 3;
+  tab(2, 3) = -1;
+  tab(2, 4) = -1;
+  tab(2, 5) = 1;
+  tab(2, 9) = -1;
+  tab(2, 9) = -1;
 
   cout << tab << endl;
   assert(false);
