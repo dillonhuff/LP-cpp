@@ -333,11 +333,13 @@ struct tableau;
 std::ostream& operator<<(std::ostream& out, const tableau& tab);
 
 struct tableau {
+  bool phase_1;
   value maximum;
   std::vector<string> column_names;
   std::set<int> basic_variables;
   std::vector<std::string> basic_vars;
   vector<vector<value> > rows;
+  std::set<std::string> artificial_variables;
 
   tableau(const int nrows, const int ncols) {
     column_names.resize(ncols);
@@ -348,6 +350,29 @@ struct tableau {
     for (auto& r : rows) {
       r.resize(ncols);
     }
+  }
+
+  void set_artificial_variable(const std::string& name) {
+    artificial_variables.insert(name);
+  }
+
+  void delete_objective() {
+    for (int r = 0; r < (int) column_names.size() - 1; r++) {
+      column_names[r] = column_names[r + 1];
+    }
+
+    for (int r = 0; r < (int) basic_vars.size() - 1; r++) {
+      basic_vars[r] = basic_vars[r + 1];
+    }
+
+    for (int r = 0; r < (int) rows.size() - 1; r++) {
+      for (int c = 0; c < (int) rows.at(r).size() - 1; c++) {
+        rows[r][c] = rows[r + 1][c + 1];
+      }
+      rows[r].resize(rows[r].size() - 1);
+    }
+
+    rows.resize(rows.size() - 1);
   }
 
   std::string row_variable(const int row) const {
@@ -593,8 +618,8 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
   //value max(0);
   value min(0);
   int pivot_row = -1;
-  //for (int r = 1; r < tab.num_rows(); r++) {
-  for (int r = 2; r < tab.num_rows(); r++) {
+  int start_row = tab.phase_1 ? 2 : 1;
+  for (int r = start_row; r < tab.num_rows(); r++) {
     value b = tab.const_coeff(r);
     value c = tab.variable_coeff(r, next_pivot_col);
     if (c > 0) {
@@ -895,6 +920,9 @@ void phase_1_test() {
   tab.set_column_name(8, "a4");
   tab.set_column_name(9, "a0");
 
+  tab.set_artificial_variable("a0");
+  tab.set_artificial_variable("a4");
+
   tab(0, 0) = 1;
   tab(0, 8) = 1;
   tab(0, 9) = 1;
@@ -935,6 +963,7 @@ void phase_1_test() {
   tab.set_basic_variable(4, "s3");
   tab.set_basic_variable(5, "a4");
 
+
   cout << tab << endl;
   tab.subtract_scaled_row(0, 1, 5);
   cout << "After subtract" << endl;
@@ -945,6 +974,7 @@ void phase_1_test() {
   cout << "After initial pivot" << endl;
   cout << tab << endl;
 
+  tab.phase_1 = true;
   auto lp = tab.maximize();
   cout << "LP = " << lp.val << endl;
 
@@ -954,7 +984,12 @@ void phase_1_test() {
   for (int r = 0; r < tab.num_rows(); r++) {
     assert(tab(r, 10) >= 0);
   }
-  //assert(false);
+
+  tab.phase_1 = false;
+  tab.delete_objective();
+
+  cout << endl;
+  cout << tab << endl;
 }
 
 int main() {
