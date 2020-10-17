@@ -107,10 +107,6 @@ value operator+(const value& v, const value& t) {
   return value(v.v + t.v);
 }
 
-//value operator+=(const value& v, const value& t) {
-  //return v + t;
-//}
-
 value operator*(const value& v, const value& t) {
   return value(v.v * t.v);
 }
@@ -595,7 +591,8 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
   //value max(0);
   value min(0);
   int pivot_row = -1;
-  for (int r = 1; r < tab.num_rows(); r++) {
+  //for (int r = 1; r < tab.num_rows(); r++) {
+  for (int r = 2; r < tab.num_rows(); r++) {
     value b = tab.const_coeff(r);
     value c = tab.variable_coeff(r, next_pivot_col);
     if (c > 0) {
