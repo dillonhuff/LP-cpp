@@ -338,15 +338,23 @@ std::ostream& operator<<(std::ostream& out, const tableau& tab);
 
 struct tableau {
   value maximum;
+  vector<string> column_names;
   std::set<int> basic_variables;
   vector<vector<value> > rows;
 
   tableau(const int nrows, const int ncols) {
+    column_names.resize(ncols);
+
     maximum = value(0);
     rows.resize(nrows);
     for (auto& r : rows) {
       r.resize(ncols);
     }
+  }
+
+  void set_column_name(const int col, const string& name) {
+    assert(col < column_names.size());
+    column_names[col] = name;
   }
 
   value& operator()(const int r, const int c) {
@@ -426,10 +434,12 @@ struct tableau {
   }
 
   void exchange(const int new_basic, const int old_basic) {
-    //cout << "adding " << new_basic << " to basis, and removing: " << old_basic << endl;
-    //assert(elem(old_basic, basic_variables));
-    //basic_variables.insert(new_basic);
-    //basic_variables.erase(old_basic);
+    cout << "adding " << new_basic << " to basis, and removing: " << old_basic << endl;
+    assert(elem(old_basic, basic_variables));
+    assert(new_basic != old_basic);
+
+    basic_variables.insert(new_basic);
+    basic_variables.erase(old_basic);
   }
 
   value const_coeff(const int row) const {
@@ -504,6 +514,13 @@ struct tableau {
 
 std::ostream& operator<<(std::ostream& out, const tableau& tab) {
   int i = 0;
+  for (auto& v : tab.column_names) {
+    std::cout << std::setfill(' ') << std::setw(6) << v;
+    cout << "  ";
+  }
+  cout << endl;
+  std::cout << std::setfill('-') << std::setw(8*(tab.num_cols() + 1)) << "" << std::endl;
+
   for (auto& r : tab.rows) {
     int j = 0;
     for (auto& v : r) {
@@ -848,6 +865,17 @@ void basic_test() {
 
 void phase_1_test() {
   tableau tab(6, 11);
+  tab.set_column_name(0, "w");
+  tab.set_column_name(1, "z");
+  tab.set_column_name(2, "x1");
+  tab.set_column_name(3, "x2");
+  tab.set_column_name(4, "x3");
+  tab.set_column_name(5, "s1");
+  tab.set_column_name(6, "s2");
+  tab.set_column_name(7, "s3");
+  tab.set_column_name(8, "a4");
+  tab.set_column_name(9, "a0");
+
   tab(0, 0) = 1;
   tab(0, 8) = 1;
   tab(0, 9) = 1;
@@ -880,6 +908,12 @@ void phase_1_test() {
   tab(5, 3) = 1;
   tab(5, 8) = 1;
   tab(5, 10) = 1;
+
+  tab.basic_variables.insert(4);
+  tab.basic_variables.insert(5);
+  tab.basic_variables.insert(6);
+  tab.basic_variables.insert(7);
+  tab.basic_variables.insert(8);
 
   cout << tab << endl;
   tab.subtract_scaled_row(0, 1, 5);
