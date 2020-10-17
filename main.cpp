@@ -398,7 +398,6 @@ struct tableau {
   lp_result maximize() {
     while (can_improve(*this)) {
       int next_pivot_col = pick_pivot_col(*this);
-      //cout << "next pivot col = " << next_pivot_col << endl;
       bool unbounded = true;
       for (int r = 0; r < num_rows(); r++) {
         if (get_entry(r, next_pivot_col) > 0) {
@@ -645,12 +644,14 @@ int pick_pivot_col(tableau& tab) {
   value min_obj_coeff(1);
 
   for (int x = (int) tab.num_cols() - 2; x >= 0; x--) {
-    if (!elem(tab.column_names.at(x), tab.basic_vars)) {
-      value c = tab.objective_coeff(x);
-      if (c < 0) {
-        if (c <= min_obj_coeff) {
-          min_obj_coeff = c;
-          next_pivot_col = x;
+    if (tab.phase_1 || !elem(tab.column_names.at(x), tab.artificial_variables)) {
+      if (!elem(tab.column_names.at(x), tab.basic_vars)) {
+        value c = tab.objective_coeff(x);
+        if (c < 0) {
+          if (c <= min_obj_coeff) {
+            min_obj_coeff = c;
+            next_pivot_col = x;
+          }
         }
       }
     }
@@ -990,6 +991,11 @@ void phase_1_test() {
 
   cout << endl;
   cout << tab << endl;
+
+  tab.maximize();
+  cout << "After phase 2..." << endl;
+  cout << tab << endl;
+  assert(tab(0, 10) == 1);
 }
 
 int main() {
