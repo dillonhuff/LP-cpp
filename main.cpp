@@ -338,18 +338,29 @@ std::ostream& operator<<(std::ostream& out, const tableau& tab);
 
 struct tableau {
   value maximum;
-  vector<string> column_names;
+  std::vector<string> column_names;
   std::set<int> basic_variables;
+  std::vector<std::string> basic_vars;
   vector<vector<value> > rows;
 
   tableau(const int nrows, const int ncols) {
     column_names.resize(ncols);
+    basic_vars.resize(nrows);
 
     maximum = value(0);
     rows.resize(nrows);
     for (auto& r : rows) {
       r.resize(ncols);
     }
+  }
+
+  std::string row_variable(const int row) const {
+    return basic_vars.at(row);
+  }
+
+  void set_basic_variable(const int row, const string& name) {
+    assert(row < num_rows());
+    basic_vars[row] = name;
   }
 
   void set_column_name(const int col, const string& name) {
@@ -408,6 +419,7 @@ struct tableau {
     }
 
     scale_row((value(1) / pivot_val), pivot_row);
+    basic_vars[next_pivot_row] = column_names.at(next_pivot_col);
   }
 
   void subtract_scaled_row(const int dst_row, const value& k, const int src_row) {
@@ -513,7 +525,6 @@ struct tableau {
 };
 
 std::ostream& operator<<(std::ostream& out, const tableau& tab) {
-  int i = 0;
   for (auto& v : tab.column_names) {
     std::cout << std::setfill(' ') << std::setw(6) << v;
     cout << "  ";
@@ -521,6 +532,7 @@ std::ostream& operator<<(std::ostream& out, const tableau& tab) {
   cout << endl;
   std::cout << std::setfill('-') << std::setw(8*(tab.num_cols() + 1)) << "" << std::endl;
 
+  int i = 0;
   for (auto& r : tab.rows) {
     int j = 0;
     for (auto& v : r) {
@@ -532,6 +544,9 @@ std::ostream& operator<<(std::ostream& out, const tableau& tab) {
       }
       j++;
     }
+
+    std::cout << std::setfill(' ') << std::setw(6) << tab.row_variable(i);
+
     cout << endl;
     if (i == 0) {
       std::cout << std::setfill('-') << std::setw(8*(r.size() + 1)) << "" << std::endl;
@@ -577,7 +592,8 @@ tableau build_initial_tableau(standard_form& form) {
 }
 
 int pick_pivot_row(const int next_pivot_col, tableau& tab) {
-  value max(0);
+  //value max(0);
+  value min(0);
   int pivot_row = -1;
   for (int r = 1; r < tab.num_rows(); r++) {
     value b = tab.const_coeff(r);
@@ -585,8 +601,10 @@ int pick_pivot_row(const int next_pivot_col, tableau& tab) {
     if (c > 0) {
       cout << "b = " << b << endl;
       cout << "c = " << c << endl;
-      if (pivot_row == -1 || (b / c) > max) {
-        max = (b / c);
+      //if (pivot_row == -1 || (b / c) > max) {
+      if (pivot_row == -1 || (b / c) < min) {
+        //max = (b / c);
+        min = (b / c);
         pivot_row = r;
       }
     }
@@ -603,11 +621,13 @@ int pick_pivot_col(tableau& tab) {
   value min_obj_coeff(1);
 
   for (int x = (int) tab.num_cols() - 2; x >= 0; x--) {
-    value c = tab.objective_coeff(x);
-    if (c < 0) {
-      if (c <= min_obj_coeff) {
-        min_obj_coeff = c;
-        next_pivot_col = x;
+    if (!elem(tab.column_names.at(x), tab.basic_vars)) {
+      value c = tab.objective_coeff(x);
+      if (c < 0) {
+        if (c <= min_obj_coeff) {
+          min_obj_coeff = c;
+          next_pivot_col = x;
+        }
       }
     }
   }
@@ -909,11 +929,12 @@ void phase_1_test() {
   tab(5, 8) = 1;
   tab(5, 10) = 1;
 
-  tab.basic_variables.insert(4);
-  tab.basic_variables.insert(5);
-  tab.basic_variables.insert(6);
-  tab.basic_variables.insert(7);
-  tab.basic_variables.insert(8);
+  tab.set_basic_variable(0, "w");
+  tab.set_basic_variable(1, "z");
+  tab.set_basic_variable(2, "s1");
+  tab.set_basic_variable(3, "s2");
+  tab.set_basic_variable(4, "s3");
+  tab.set_basic_variable(5, "a4");
 
   cout << tab << endl;
   tab.subtract_scaled_row(0, 1, 5);
