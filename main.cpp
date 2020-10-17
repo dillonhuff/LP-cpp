@@ -365,6 +365,8 @@ struct tableau {
   }
 
   value& operator()(const int r, const int c) {
+    assert(r < num_rows());
+    assert(c < num_cols());
     return rows[r][c];
   }
 
@@ -948,13 +950,17 @@ void phase_1_test() {
 
   cout << "After max" << endl;
   cout << tab << endl;
-  assert(false);
+  assert(tab(0, 10) == 0);
+  for (int r = 0; r < tab.num_rows(); r++) {
+    assert(tab(r, 10) >= 0);
+  }
+  //assert(false);
 }
 
 int main() {
   constraint_set_test();
   phase_1_test();
-  basic_test();
+  //basic_test();
   //ft_test();
   //unbounded_test();
   //no_solution_test();
